@@ -1,0 +1,62 @@
+/* App.css - Основные стили для структуры приложения */
+
+/* Основной контейнер приложения */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-light);
+}
+
+/* Контейнер для содержимого страницы */
+.page-container {
+  padding-top: 80px;
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+  flex: 1;
+}
+
+/* Стили для основных контейнеров страниц */
+.auth-container {
+  max-width: 450px;
+  margin: var(--spacing-xl) auto;
+  padding: var(--spacing-xl);
+  background-color: var(--bg-white);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-dark);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .page-container {
+    padding-top: 70px;
+  }
+  
+  .auth-container {
+    max-width: 100%;
+    margin: var(--spacing-lg) var(--spacing-sm);
+    padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding-top: 60px;
+  }
+  
+  .auth-container {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    box-shadow: none;
+    border-radius: 0;
+  }
+}

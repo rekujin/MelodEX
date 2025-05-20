@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './Register.css'
 import supabase from "../helper/supabaseClient"
 
@@ -71,36 +71,38 @@ const FIELDS = {
 
 function Register() {
   const [formData, setFormData] = useState({ email: '', username: '', password: '' })
-  const [touched, setTouched] = useState({ email: false, username: false, password: false })
   const [message, setMessage] = useState({ text: '', type: '' })
   const [isLoading, setIsLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const handleInputChange = (field, value) => {
     if (field !== 'username' && CYRILLIC_REGEX.test(value)) return
-
     setFormData(prev => ({ ...prev, [field]: value }))
-    if (touched[field]) {
-      const error = FIELDS[field].validate(value)
-      setMessage(error ? { text: error, type: 'error' } : { text: '', type: '' })
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: null }))
     }
-  }
-
-  const handleBlur = (field) => {
-    setTouched(prev => ({ ...prev, [field]: true }))
-    const error = FIELDS[field].validate(formData[field])
-    setMessage(error ? { text: error, type: 'error' } : { text: '', type: '' })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setTouched({ email: true, username: true, password: true })
-
+    
+    const errors = {}
+    let hasErrors = false
+    
     for (const field of Object.keys(FIELDS)) {
       const error = FIELDS[field].validate(formData[field])
       if (error) {
-        setMessage({ text: error, type: 'error' })
-        return
+        errors[field] = error
+        hasErrors = true
       }
+    }
+    
+    if (hasErrors) {
+      setFieldErrors(errors)
+
+      const firstErrorField = Object.keys(errors).find(field => errors[field])
+      setMessage({ text: errors[firstErrorField], type: 'error' })
+      return
     }
 
     setIsLoading(true)
@@ -125,7 +127,7 @@ function Register() {
         type: 'success'
       })
       setFormData({ email: '', username: '', password: '' })
-      setTouched({ email: false, username: false, password: false })
+      setFieldErrors({})
     } catch (error) {
       setMessage({
         text: translateSupabaseError(error) || 'Произошла ошибка при регистрации',
@@ -135,8 +137,6 @@ function Register() {
       setIsLoading(false)
     }
   }
-
-  const emailError = FIELDS.email.validate(formData.email)
 
   return (
     <div className="auth-container">
@@ -153,27 +153,14 @@ function Register() {
               type={config.type}
               value={formData[field]}
               onChange={(e) => handleInputChange(field, e.target.value)}
-              onBlur={() => handleBlur(field)}
               placeholder={config.placeholder}
-              disabled={field !== 'email' && !!emailError}
-              className={
-                touched[field] &&
-                FIELDS[field].validate(formData[field]) &&
-                message.type !== 'success'
-                  ? 'input-error'
-                  : ''
-              }
+              className={fieldErrors[field] ? 'input-error' : ''}
             />
           </div>
         ))}
         <button
           type="submit"
-          disabled={
-            isLoading ||
-            Object.keys(FIELDS).some(field => 
-              FIELDS[field].validate(formData[field])
-            )
-          }
+          disabled={isLoading}
           className="submit-btn"
         >
           {isLoading ? "Отправка..." : "Зарегистрироваться"}
