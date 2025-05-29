@@ -59,6 +59,10 @@
   font-weight: 600;
 }
 
+.logout-btn:hover {
+  color: #e74c3c;
+}
+
 /* Добавляем бургер-меню для мобильных устройств */
 .menu-icon {
   display: none;

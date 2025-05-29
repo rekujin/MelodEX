@@ -1,13 +1,24 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 import './Navbar.css'
+import CreateModal from './CreateModal'
 
 function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [menuActive, setMenuActive] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { user, signOut } = useAuth()
   
   const toggleMenu = () => {
     setMenuActive(!menuActive)
+  }
+
+  const handleLogout = async () => {
+    await signOut()
+    setMenuActive(false)
+    navigate('/')
   }
   
   return (
@@ -38,21 +49,54 @@ function Navbar() {
           >
             Главная
           </Link>
-          <Link 
-            to="/login" 
-            className={`nav-item ${location.pathname === '/login' ? 'active' : ''}`}
-            onClick={() => setMenuActive(false)}
-          >
-            Войти
-          </Link>
-          <Link 
-            to="/register" 
-            className={`nav-item ${location.pathname === '/register' ? 'active' : ''}`}
-            onClick={() => setMenuActive(false)}
-          >
-            Регистрация
-          </Link>
+          
+          {!user ? (
+            <>
+              <Link 
+                to="/register" 
+                className={`nav-item ${location.pathname === '/register' ? 'active' : ''}`}
+                onClick={() => setMenuActive(false)}
+              >
+                Регистрация
+              </Link>
+              <Link 
+                to="/login" 
+                className={`nav-item ${location.pathname === '/login' ? 'active' : ''}`}
+                onClick={() => setMenuActive(false)}
+              >
+                Войти
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link 
+                to="/profile" 
+                className={`nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
+                onClick={() => setMenuActive(false)}
+              >
+                Профиль
+              </Link>
+              <Link 
+                className="nav-item logout-btn"
+                onClick={handleLogout}
+              >
+                Выйти
+              </Link>
+            </>
+          )}
         </div>
+        
+        <button 
+          className="create-button"
+          onClick={() => setIsModalOpen(true)}
+        >
+          Создать
+        </button>
+        <CreateModal 
+          isOpen={isModalOpen}
+          currentUser={user}
+          onClose={() => setIsModalOpen(false)} 
+        />
       </div>
     </nav>
   )

@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AuthRedirect from './components/AuthRedirect'
+import RequireAuth from './components/RequireAuth'
 
-//Импорт компонентов
 import Navbar from './components/Navbar'
 
-//Импорт страниц
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Profile from './pages/Profile'
 
-//Импорт стилей
 import './index.css'
 import './App.css'
 
@@ -25,16 +25,34 @@ function App() {
               element={<Home />}
             />
 
-            {/* login */}
-            <Route 
-              path='/login'
-              element={<Login />}
-            />
-
             {/* register */}
             <Route 
               path='/register'
-              element={<Register />}
+              element={
+                <AuthRedirect>
+                  <Register />
+                </AuthRedirect>
+              }
+            />
+
+            {/* login */}
+            <Route 
+              path='/login'
+              element={
+                <AuthRedirect>
+                  <Login />
+                </AuthRedirect>
+              }
+            />
+
+            {/* profile */}
+            <Route
+              path='/profile'
+              element={
+                <RequireAuth>
+                  <Profile />
+                </RequireAuth>
+              }
             />
           </Routes>
         </div>
