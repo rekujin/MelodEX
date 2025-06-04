@@ -96,6 +96,10 @@ function Navbar() {
           isOpen={isModalOpen}
           currentUser={user}
           onClose={() => setIsModalOpen(false)} 
+          onImportSuccess={(playlistData) => {
+            setIsModalOpen(false);
+            navigate('/create-playlist', { state: { playlistData } });
+          }}
         />
       </div>
     </nav>

@@ -2,6 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
+import swaggerUi from 'swagger-ui-express';
+
+import { getSoundCloudToken } from './soundcloud/auth.js';
+import { getSpotifyToken } from './spotify/auth.js';
+
+// Импорт swaggerSpec из отдельного файла
+import { swaggerSpec } from './swagger.js';
 
 dotenv.config();
 
@@ -22,21 +29,56 @@ app.use((req, res, next) => {
   next();
 });
 
-// Yandex Music Endpoint
-app.get('/api/users/:username/playlists/:kind', async (req, res) => {
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+/**
+ * @swagger
+ * /api/yandex/resolve:
+ *   get:
+ *     summary: Получить плейлист Яндекс.Музыки
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: URL плейлиста Яндекс.Музыки
+ *     responses:
+ *       200:
+ *         description: Успешное получение плейлиста
+ *       400:
+ *         description: Неверная ссылка
+ *       404:
+ *         description: Плейлист не найден
+ *       500:
+ *         description: Ошибка сервера
+ */
+app.get('/api/yandex/resolve', async (req, res) => {
   try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'Missing ?url parameter' });
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    const pathMatch = parsedUrl.pathname.match(/\/users\/([^\/]+)\/playlists\/(\d+)/);
+    if (!pathMatch) {
+      return res.status(400).json({ error: 'URL does not match Yandex.Music playlist pattern' });
+    }
+
+    const username = pathMatch[1];
+    const kind = pathMatch[2];
+    
     const token = process.env.YANDEX_MUSIC_TOKEN;
     if (!token) return res.status(500).json({ error: 'Server configuration error' });
 
-    const { username, kind } = req.params;
-    
-    // Validation
-    if (!username || !kind || isNaN(Number(kind))) {
-      return res.status(400).json({ error: 'Invalid parameters' });
-    }
-
     const response = await fetch(
-      `https://api.music.yandex.net/users/${username}/playlists/${kind}`, //тестовая ссылка - https://music.yandex.ru/users/music-blog/playlists/2379
+      `https://api.music.yandex.net/users/${username}/playlists/${kind}`,
       {
         headers: {
           'Authorization': `OAuth ${token}`,
@@ -58,11 +100,12 @@ app.get('/api/users/:username/playlists/:kind', async (req, res) => {
     const data = await response.json();
     if (!data.result) return res.status(404).json({ error: 'Плейлист не найден' });
 
-    // Data transformation
     const formattedData = {
       result: {
         title: data.result.title,
+        description: data.result.description,
         trackCount: data.result.trackCount,
+        cover: data.result.cover?.itemsUri?.[0] || data.result.ogImage || null,
         tracks: (data.result.tracks || []).map(item => ({
           track: {
             id: item.id,
@@ -78,7 +121,7 @@ app.get('/api/users/:username/playlists/:kind', async (req, res) => {
     res.json(formattedData);
     
   } catch (error) {
-    console.error('Endpoint error:', error);
+    console.error('Yandex resolve error:', error);
     const status = error.type === 'system' ? 503 : 500;
     res.status(status).json({ 
       error: { 
@@ -86,6 +129,160 @@ app.get('/api/users/:username/playlists/:kind', async (req, res) => {
           ? 'Сервис временно недоступен' 
           : 'Внутренняя ошибка сервера' 
       }
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/soundcloud/resolve:
+ *   get:
+ *     summary: Получить плейлист SoundCloud
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: URL плейлиста SoundCloud
+ *     responses:
+ *       200:
+ *         description: Успешное получение плейлиста
+ *       400:
+ *         description: Неверная ссылка
+ *       404:
+ *         description: Плейлист не найден
+ *       500:
+ *         description: Ошибка сервера
+ */
+app.get('/api/soundcloud/resolve', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'Missing ?url parameter' });
+
+    const access_token = await getSoundCloudToken();
+
+    const resolveRes = await fetch(
+      `https://api.soundcloud.com/resolve?url=${encodeURIComponent(url)}`,
+      {
+        headers: {
+          'Authorization': `OAuth ${access_token}`
+        }
+      }
+    );
+
+    if (!resolveRes.ok) {
+      const errorText = await resolveRes.text();
+      console.error('Resolve error:', errorText);
+      return res.status(resolveRes.status).json({ error: 'Ошибка при resolve запроса' });
+    }
+
+    const playlist = await resolveRes.json();
+
+    if (playlist.kind !== 'playlist') {
+      return res.status(400).json({ error: 'Ссылка не ведёт на плейлист' });
+    }
+
+    const formattedData = {
+      result: {
+        title: playlist.title,
+        trackCount: playlist.tracks.length,
+        tracks: playlist.tracks.map(track => ({
+          track: {
+            id: track.id,
+            title: track.title,
+            artists: [{ name: track.user.username }],
+            durationMs: track.duration,
+            albums: [{ title: track.user.username }]
+          }
+        }))
+      }
+    };
+
+    res.json(formattedData);
+  } catch (err) {
+    console.error('SoundCloud resolve error:', err);
+    res.status(500).json({ error: 'Ошибка при обработке запроса SoundCloud' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/spotify/resolve:
+ *   get:
+ *     summary: Получить плейлист Spotify
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: URL плейлиста Spotify
+ *     responses:
+ *       200:
+ *         description: Успешное получение плейлиста
+ *       400:
+ *         description: Неверная ссылка
+ *       404:
+ *         description: Плейлист не найден
+ *       500:
+ *         description: Ошибка сервера
+ */
+app.get('/api/spotify/resolve', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'Missing ?url parameter' });
+
+    const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
+    if (!match || !match[1]) {
+      return res.status(400).json({ error: 'Invalid Spotify playlist URL' });
+    }
+
+    const playlistId = match[1];
+    const accessToken = await getSpotifyToken();
+
+    const response = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        },
+        timeout: 5000
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Spotify API error:', response.status);
+      return res.status(response.status).json({
+        error: { message: 'Ошибка при получении данных' }
+      });
+    }
+
+    const data = await response.json();
+    
+    const formattedData = {
+      result: {
+        title: data.name,
+        trackCount: data.tracks.total,
+        tracks: data.tracks.items.map(item => ({
+          track: {
+            id: item.track.id,
+            title: item.track.name,
+            artists: item.track.artists.map(artist => ({ name: artist.name })),
+            durationMs: item.track.duration_ms,
+            albums: [{ title: item.track.album.name }]
+          }
+        }))
+      }
+    };
+    
+    res.json(formattedData);
+    
+  } catch (error) {
+    console.error('Spotify resolve error:', error);
+    res.status(500).json({ 
+      error: { message: 'Ошибка при обработке ссылки Spotify' }
     });
   }
 });

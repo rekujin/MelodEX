@@ -1,0 +1,253 @@
+.playlist-root {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.playlist-header {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.playlist-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.playlist-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  transition: all var(--transition-normal);
+  margin-bottom: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.playlist-back-btn:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.playlist-header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.playlist-avatar {
+  width: 192px;
+  height: 192px;
+  background: linear-gradient(135deg, #a78bfa, #3b82f6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.playlist-avatar-image {
+ border-radius: 12px;
+}
+.playlist-avatar-icon {
+  color: #fff;
+}
+
+.playlist-info {
+  flex: 1;
+}
+
+.playlist-platform-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.playlist-platform-label {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  display: inline-block;
+}
+.platform-yandex {
+  background: #fef08a;
+  color: #854d0e;
+}
+.platform-spotify {
+  background: #bbf7d0;
+  color: #166534;
+}
+.platform-soundcloud {
+  background: #fed7aa;
+  color: #c2410c;
+}
+.platform-default {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.playlist-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.playlist-desc {
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.playlist-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+.playlist-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.playlist-tracks-container {
+  /*max-width: 1100px;*/
+  margin: 0 auto;
+  padding: 24px 0px;
+}
+
+.playlist-tracks-box {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.playlist-tracks-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+
+}
+.playlist-tracks-title {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.playlist-table-wrapper {
+  overflow-x: auto;
+}
+.playlist-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.playlist-table th, .playlist-table td {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 0.97rem;
+}
+.playlist-table th {
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f3f4f6;
+}
+.playlist-table-row:hover {
+  background: #f3f4f6;
+  transition: background 0.2s;
+}
+
+.playlist-track-cover {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.playlist-track-cover-icon {
+  color: #6b7280;
+}
+
+.playlist-track-title {
+  font-weight: 500;
+  color: #111827;
+}
+.playlist-track-artist,
+.playlist-track-album,
+.playlist-track-date,
+.playlist-track-duration {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.97rem;
+}
+
+.playlist-empty {
+  padding: 48px 0;
+  text-align: center;
+}
+.playlist-empty-icon {
+  color: #d1d5db;
+  margin-bottom: 16px;
+}
+.playlist-empty-text {
+  color: #6b7280;
+}
+
+.playlist-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.playlist-cancel-btn {
+  padding: 8px 24px;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  border-radius: 8px;
+  background: #fff;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.playlist-cancel-btn:hover {
+  background: #f3f4f6;
+}
+.playlist-save-btn {
+  padding: 8px 24px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.playlist-save-btn:hover {
+  background: #1d4ed8;
+}
+
+.playlist-loading {
+  min-height: 100vh;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.playlist-spinner {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #2563eb;
+  border-top: 2px solid transparent;
+  animation: playlist-spin 1s linear infinite;
+}
+@keyframes playlist-spin {
+  to { transform: rotate(360deg); }
+}
