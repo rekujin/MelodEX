@@ -39,6 +39,11 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.form-group input[type="password"],
+.form-group input[data-ispassword="true"] {
+  padding-right: 40px;
+}
+
 .form-group input:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
@@ -109,13 +114,30 @@
   border-left: 4px solid #2ecc71;
 }
 
+.login-eye-icon,
+.login-eye-off-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-dark);
+  transition: background-color 0.2s;
+}
 .toggle-password {
-  position: absolute;
-  right: 10px;
   background: none;
   border: none;
-  cursor: pointer;
   padding: 0;
+  cursor: pointer;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.toggle-password:hover {
+    background-color: var(--primary-light);
 }
 
 /* Адаптивность */

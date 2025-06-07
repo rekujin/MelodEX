@@ -7,6 +7,8 @@ function Home() {
         <Link to="/login">Login</Link>
         <br />
         <Link to="/register">Register</Link> 
+        <br />
+        <Link to="/playlists">Плейлисты</Link>
     </div>
   )
 }

@@ -6,8 +6,9 @@ import swaggerUi from 'swagger-ui-express';
 
 import { getSoundCloudToken } from './soundcloud/auth.js';
 import { getSpotifyToken } from './spotify/auth.js';
+import { fetchAllTracks } from './spotify/fetchAllTracks.js';
+import { mapSpotifyTracks } from './spotify/mapSpotifyTracks.js';
 
-// Импорт swaggerSpec из отдельного файла
 import { swaggerSpec } from './swagger.js';
 
 dotenv.config();
@@ -15,7 +16,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security & Config Middleware
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || '*',
   methods: 'GET',
@@ -31,6 +31,24 @@ app.use((req, res, next) => {
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+const formatImageUrl = (url, service) => {
+  if (!url) return null;
+  
+  switch (service) {
+    case 'spotify':
+      return url.replace(/\/\w+\.jpg/, '/200x200.jpg');
+    
+    case 'soundcloud':
+      return url.replace(/-\w+\.jpg/, '-t200x200.jpg');
+    
+    case 'yandex':
+      return 'https://' + url.replace('%%', '200x200');
+      
+    default:
+      return url;
+  }
+};
 
 /**
  * @swagger
@@ -105,11 +123,12 @@ app.get('/api/yandex/resolve', async (req, res) => {
         title: data.result.title,
         description: data.result.description,
         trackCount: data.result.trackCount,
-        cover: data.result.cover?.itemsUri?.[0] || data.result.ogImage || null,
+        cover: formatImageUrl(data.result.cover?.itemsUri?.[0] || data.result.ogImage, 'yandex'),
         tracks: (data.result.tracks || []).map(item => ({
           track: {
             id: item.id,
             title: item.track.title,
+            cover: formatImageUrl(item.track.coverUri, 'yandex'),
             artists: item.track.artists,
             durationMs: item.track.durationMs,
             albums: item.track.albums
@@ -171,6 +190,7 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
       }
     );
 
+
     if (!resolveRes.ok) {
       const errorText = await resolveRes.text();
       console.error('Resolve error:', errorText);
@@ -186,11 +206,14 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
     const formattedData = {
       result: {
         title: playlist.title,
+        description: playlist.description || '',
         trackCount: playlist.tracks.length,
+        cover: formatImageUrl(playlist.artwork_url, 'soundcloud'),
         tracks: playlist.tracks.map(track => ({
           track: {
             id: track.id,
             title: track.title,
+            cover: formatImageUrl(track.artwork_url, 'soundcloud'),
             artists: [{ name: track.user.username }],
             durationMs: track.duration,
             albums: [{ title: track.user.username }]
@@ -261,19 +284,16 @@ app.get('/api/spotify/resolve', async (req, res) => {
 
     const data = await response.json();
     
+    const allTrackItems = await fetchAllTracks(playlistId, accessToken, data.tracks.total);
+    const { tracks: mappedTracks, actualCount } = mapSpotifyTracks(allTrackItems);
+
     const formattedData = {
       result: {
         title: data.name,
-        trackCount: data.tracks.total,
-        tracks: data.tracks.items.map(item => ({
-          track: {
-            id: item.track.id,
-            title: item.track.name,
-            artists: item.track.artists.map(artist => ({ name: artist.name })),
-            durationMs: item.track.duration_ms,
-            albums: [{ title: item.track.album.name }]
-          }
-        }))
+        description: data.description || '',
+        trackCount: actualCount,
+        cover: formatImageUrl(data.images[0]?.url, 'spotify'),
+        tracks: mappedTracks
       }
     };
     

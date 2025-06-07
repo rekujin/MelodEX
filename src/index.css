@@ -3,8 +3,8 @@
 /* === CSS переменные для консистентности === */
 :root {
   /* Основная палитра цветов */
-  --primary-color: #3498db;
-  --primary-dark: #2980b9;
+  --primary-color: #2563eb;
+  --primary-dark: #1d51c1;
   --primary-light: #ebf5fb;
   --secondary-color: #2ecc71;
   --secondary-dark: #27ae60;
@@ -15,7 +15,7 @@
   --text-light: #bdc3c7;
   
   /* Цвета для фона */
-  --bg-light: #f9f9f9;
+  --bg-light: #f9fafb;
   --bg-white: #ffffff;
   --bg-gray: #f5f5f5;
   

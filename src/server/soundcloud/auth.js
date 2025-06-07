@@ -11,7 +11,6 @@ export async function getSoundCloudToken() {
     return cachedToken;
   }
 
-  //Если уже идет запрос за токеном, вернем его Promise
   if (tokenPromise) {
     return tokenPromise;
   }
@@ -43,7 +42,6 @@ export async function getSoundCloudToken() {
 
       return cachedToken;
     } finally {
-      //Сбрасываем Promise после завершения запроса (успешного или с ошибкой)
       tokenPromise = null;
     }
   })();
