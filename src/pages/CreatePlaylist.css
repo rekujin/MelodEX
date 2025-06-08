@@ -71,6 +71,26 @@
   height: 64px;
 }
 
+.playlist-avatar-wrapper {
+  position: relative;
+}
+
+.playlist-avatar-edit {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  background: white;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.playlist-avatar-edit:hover {
+  transform: scale(1.1);
+}
+
 .playlist-info {
   flex: 1;
 }
@@ -112,6 +132,41 @@
   margin-bottom: 12px;
 }
 
+.playlist-title-input,
+.playlist-description-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.playlist-description-input {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.edit-button {
+  background: none;
+  border: none;
+  border-radius: 50%;
+  padding: 4px;
+  margin-left: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.3s, transform 0.3s;
+}
+
+.edit-button:hover {
+  background-color: var(--primary-light);
+  transform: scale(1.1);
+}
+
+.playlist-title:hover .edit-button {
+  opacity: 1;
+}
+
 .playlist-desc {
   color: #6b7280;
   margin-bottom: 16px;
@@ -124,6 +179,7 @@
   font-size: 0.95rem;
   color: #6b7280;
 }
+
 .playlist-meta {
   display: flex;
   align-items: center;
@@ -133,6 +189,90 @@
     width: 16px;
     height: 16px;
   }
+}
+
+.playlist-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  margin-top: 12px;
+}
+
+.playlist-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.playlist-tag-remove {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.playlist-tag-remove:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.playlist-tag-input-container {
+  display: flex;
+  gap: 8px;
+}
+
+.playlist-tag-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.playlist-tag-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.playlist-tag-add {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.playlist-tag-add-btn:hover {
+  background: #2563eb;
+}
+
+.playlist-tag-add-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.playlist-tags-info {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
 }
 
 .playlist-tracks-container {
@@ -192,11 +332,22 @@
   transition: background 0.2s;
 }
 
+.playlist-track-artist svg,
+.playlist-track-album svg,
+.playlist-track-date svg,
+.playlist-track-duration svg {
+  min-width: 14px;
+  min-height: 14px;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .playlist-track-cover {
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,6 +356,11 @@
 }
 .playlist-track-cover.has-image {
   background: none;
+}
+.playlist-track-cover.has-image img {
+  border: 1px solid #e0e0e0;
+  border-radius: var(--border-radius-md);
+  box-sizing: border-box;
 }
 .playlist-track-avatar-image {
   width: 100%;
@@ -234,7 +390,7 @@
 .playlist-track-duration {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   color: #6b7280;
   font-size: 0.97rem;
   min-width: 0;
@@ -264,6 +420,30 @@
   max-width: 140px;
   vertical-align: middle;
   word-spacing: -2px;
+}
+
+.track-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.track-remove:hover {
+  background: var(--bg-error);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.playlist-table-row:hover .track-remove {
+  opacity: 1;
 }
 
 .playlist-empty {
@@ -361,3 +541,4 @@
 .playlist-saving-overlay p {
   margin-top: 16px;
 }
+/* asdasdsada*/

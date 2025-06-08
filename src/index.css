@@ -18,6 +18,7 @@
   --bg-light: #f9fafb;
   --bg-white: #ffffff;
   --bg-gray: #f5f5f5;
+  --bg-error: #fddfdf;
   
   /* Цвета для состояний */
   --error-color: #e74c3c;
@@ -129,7 +130,7 @@ button,
 .button,
 input[type="submit"] {
   display: inline-block;
-  background-color: var(--primary-color);
+  background-color: linear-gradient(135deg, var(--primary-color), #8b5cf6);
   color: white;
   border: none;
   border-radius: var(--border-radius-sm);
@@ -288,34 +289,30 @@ label {
 
 /* === Сообщения и уведомления === */
 .message {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--border-radius-sm);
-  margin-bottom: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
   font-weight: 500;
-}
-
-.message.error {
-  background-color: rgba(231, 76, 60, 0.1);
-  color: var(--error-color);
-  border-left: 4px solid var(--error-color);
+  font-size: 14px;
 }
 
 .message.success {
-  background-color: rgba(46, 204, 113, 0.1);
-  color: var(--success-color);
-  border-left: 4px solid var(--success-color);
+  background-color: rgb(240, 253, 244);
+  color: rgb(22, 101, 52);
+  border: 1px solid rgb(187, 247, 208);
 }
 
-.message.warning {
-  background-color: rgba(243, 156, 18, 0.1);
-  color: var(--warning-color);
-  border-left: 4px solid var(--warning-color);
+.message.error {
+  background-color: #fdeaea;
+  color: #c0392b;
+  border-left: 4px solid #e74c3c;
 }
-
-.message.info {
-  background-color: rgba(52, 152, 219, 0.1);
-  color: var(--info-color);
-  border-left: 4px solid var(--info-color);
+.message svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* === Адаптивность === */

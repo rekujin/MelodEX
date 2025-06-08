@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Heart, Music, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import supabase from "../helper/supabaseClient";
 import './PlaylistsPage.css';
+import { useAuth } from "../hooks/useAuth";
 
 const PlaylistsPage = () => {
   const [activeTab, setActiveTab] = useState('created');
   const [createdPlaylists, setCreatedPlaylists] = useState([]);
   const [likedPlaylists, setLikedPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        fetchPlaylists(user.id);
-      }
-    };
-    
-    getUser();
-  }, []);
+    if (user) {
+      fetchPlaylists(user.id);
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [user, authLoading]);
 
   const fetchPlaylists = async (userId) => {
     setLoading(true);
@@ -141,7 +142,17 @@ const PlaylistsPage = () => {
           
           <div className="playlists-meta-item">
             <User className="w-4 h-4" />
-            <span className="playlists-meta-author">{getAuthorName(playlist)}</span>
+            <span
+              className="playlists-meta-author"
+              style={{ cursor: playlist.author?.username ? 'pointer' : 'default' }}
+              onClick={() => {
+                if (playlist.author?.username) {
+                  navigate(`/user/${playlist.author.username}`);
+                }
+              }}
+            >
+              {getAuthorName(playlist)}
+            </span>
           </div>
         </div>
         
@@ -156,7 +167,7 @@ const PlaylistsPage = () => {
   );
 
   const TabContent = ({ playlists }) => {
-    if (loading) {
+    if (loading || authLoading) {
       return (
         <div className="loading-spinner">
           <div className="spinner"></div>

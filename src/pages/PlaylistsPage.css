@@ -198,6 +198,10 @@
   white-space: nowrap;
 }
 
+.playlists-meta-author:hover {
+  color: var(--primary-dark);
+}
+
 .loading-spinner {
   display: flex;
   align-items: center;

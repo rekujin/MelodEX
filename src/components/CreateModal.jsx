@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Download, CheckCircle } from 'lucide-react';
+import { X, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import './CreateModal.css';
 
 const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
@@ -126,8 +126,9 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
 
               {/* Ошибка */}
               {error && (
-                <div className="error-message">
-                  {error}
+                <div className="message error">
+                  <AlertCircle />
+                  <span>{error}</span>
                 </div>
               )}
 

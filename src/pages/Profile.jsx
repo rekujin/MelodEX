@@ -10,9 +10,10 @@ import {
 } from "lucide-react";
 import supabase from "../helper/supabaseClient";
 import "./Profile.css";
+import { useAuth } from "../hooks/useAuth";
 
 const ProfilePage = () => {
-  const [user, setUser] = useState(null);
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,20 +27,17 @@ const ProfilePage = () => {
   });
 
   useEffect(() => {
-    loadUserProfile();
-  }, []);
+    if (user) {
+      loadUserProfile();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+    // eslint-disable-next-line
+  }, [user, authLoading]);
 
   const loadUserProfile = async () => {
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) throw userError;
       if (!user) return;
-
-      setUser(user);
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -170,7 +168,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="loading-spinner">
         <div className="spinner"></div>
@@ -234,9 +232,9 @@ const ProfilePage = () => {
                 }`}
               >
                 {message.type === "success" ? (
-                  <Check className="w-5 h-5" />
+                  <Check />
                 ) : (
-                  <AlertCircle className="w-5 h-5" />
+                  <AlertCircle />
                 )}
                 <span>{message.text}</span>
               </div>
@@ -311,9 +309,9 @@ const ProfilePage = () => {
               className="save-button"
             >
               {saving ? (
-                <div className="spinner"></div>
+                <div className="loader"></div>
               ) : (
-                <Save className="w-5 h-5" />
+                <Save />
               )}
               {saving ? "Сохранение..." : "Сохранить изменения"}
             </button>

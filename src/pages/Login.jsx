@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import supabase from "../helper/supabaseClient";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 const translateSupabaseError = (error) => {
   if (!error?.message) return "Произошла ошибка при входе";
@@ -119,7 +119,14 @@ function Login() {
     <div className="auth-container">
       <h2>Вход</h2>
       {message.text && (
-        <div className={`message ${message.type}`}>{message.text}</div>
+        <div className={`message ${message.type}`}>
+          {message.type === "success" ? (
+            <Check />
+          ) : (
+            <AlertCircle />
+          )}
+          <span>{message.text}</span>
+        </div>
       )}
       <form onSubmit={handleSubmit} noValidate>
         {Object.entries(FIELDS).map(([field, config]) => (

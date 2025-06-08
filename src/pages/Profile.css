@@ -115,27 +115,6 @@
   color: rgb(17, 24, 39);
 }
 
-.message {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.message.success {
-  background-color: rgb(240, 253, 244);
-  color: rgb(22, 101, 52);
-  border: 1px solid rgb(187, 247, 208);
-}
-
-.message.error {
-  background-color: rgb(254, 242, 242);
-  color: rgb(153, 27, 27);
-  border: 1px solid rgb(254, 202, 202);
-}
-
 .form-group {
   position: relative;
   margin-bottom: 20px;
@@ -197,10 +176,6 @@
   transition: background-color 0.2s;
 }
 
-.save-button:hover:not(:disabled) {
-  background-color: --primary-dark;
-}
-
 .save-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -226,4 +201,18 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.loader {
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
