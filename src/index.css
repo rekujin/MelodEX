@@ -130,7 +130,7 @@ button,
 .button,
 input[type="submit"] {
   display: inline-block;
-  background-color: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: var(--border-radius-sm);

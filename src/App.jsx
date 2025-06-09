@@ -10,7 +10,8 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import CreatePlaylist from "./pages/CreatePlaylist";
-import Playlists from "./pages/PlaylistsPage";
+import Playlists from "./pages/PlaylistLibrary";
+import PlaylistView from "./pages/PlaylistView";
 
 import "./index.css";
 import "./App.css";
@@ -81,6 +82,11 @@ function App() {
                   <Playlists />
                 </RequireAuth>
               }
+            />
+
+            <Route 
+              path="/playlist/:id" 
+              element={<PlaylistView />} 
             />
           </Routes>
         </div>

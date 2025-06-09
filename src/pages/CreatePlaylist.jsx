@@ -10,6 +10,7 @@ import {
   X,
   Plus,
   Trash2,
+  Check,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -78,6 +79,25 @@ const CreatePlaylist = () => {
       soundcloud: "SoundCloud",
     };
     return names[platform] || platform;
+  };
+
+  // Функция для сохранения изменений названия и описания
+  const handleSaveEdit = () => {
+    setCurrentPlaylist({
+      ...currentPlaylist,
+      title: editedData.title,
+      description: editedData.description,
+    });
+    setIsEditing(false);
+  };
+
+  // Функция для отмены редактирования
+  const handleCancelEdit = () => {
+    setEditedData({
+      title: currentPlaylist.title,
+      description: currentPlaylist.description || "",
+    });
+    setIsEditing(false);
   };
 
   const handleTagAdd = useCallback(() => {
@@ -205,25 +225,44 @@ const CreatePlaylist = () => {
 
               {isEditing ? (
                 <>
-                  <input
-                    type="text"
-                    value={editedData.title}
-                    onChange={(e) =>
-                      setEditedData({ ...editedData, title: e.target.value })
-                    }
-                    className="playlist-title-input"
-                  />
-                  <textarea
-                    value={editedData.description}
-                    onChange={(e) =>
-                      setEditedData({
-                        ...editedData,
-                        description: e.target.value,
-                      })
-                    }
-                    className="playlist-description-input"
-                    placeholder="Добавьте описание..."
-                  />
+                  <div className="playlist-edit-container">
+                    <input
+                      type="text"
+                      value={editedData.title}
+                      onChange={(e) =>
+                        setEditedData({ ...editedData, title: e.target.value })
+                      }
+                      className="playlist-title-input"
+                      placeholder="Название плейлиста"
+                    />
+                    <textarea
+                      value={editedData.description}
+                      onChange={(e) =>
+                        setEditedData({
+                          ...editedData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="playlist-description-input"
+                      placeholder="Добавьте описание..."
+                    />
+                    <div className="playlist-edit-buttons">
+                      <button
+                        onClick={handleSaveEdit}
+                        className="playlist-edit-save-btn"
+                      >
+                        <Check size={16} />
+                        Сохранить
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="playlist-edit-cancel-btn"
+                      >
+                        <X size={16} />
+                        Отмена
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : (
                 <>

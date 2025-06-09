@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Heart, Music, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import supabase from "../helper/supabaseClient";
-import './PlaylistsPage.css';
+import './PlaylistLibrary.css';
 import { useAuth } from "../hooks/useAuth";
 
-const PlaylistsPage = () => {
+const PlaylistLibrary = () => {
   const [activeTab, setActiveTab] = useState('created');
   const [createdPlaylists, setCreatedPlaylists] = useState([]);
   const [likedPlaylists, setLikedPlaylists] = useState([]);
@@ -122,7 +122,11 @@ const PlaylistsPage = () => {
   };
 
   const PlaylistCard = ({ playlist }) => (
-    <div className="playlists-card">
+    <div 
+      className="playlists-card"
+      onClick={() => navigate(`/playlist/${playlist.id}`)}
+      style={{ cursor: 'pointer' }}
+    >
       <div className="playlists-cover">
         {playlist.avatar_url ? (
           <img src={playlist.avatar_url} alt={playlist.title} />
@@ -142,17 +146,18 @@ const PlaylistsPage = () => {
           
           <div className="playlists-meta-item">
             <User className="w-4 h-4" />
-            <span
-              className="playlists-meta-author"
-              style={{ cursor: playlist.author?.username ? 'pointer' : 'default' }}
-              onClick={() => {
-                if (playlist.author?.username) {
-                  navigate(`/user/${playlist.author.username}`);
-                }
-              }}
-            >
-              {getAuthorName(playlist)}
-            </span>
+          <span
+            className="playlists-meta-author"
+            style={{ cursor: playlist.author?.username ? 'pointer' : 'default' }}
+            onClick={(e) => {
+              e.stopPropagation(); // Останавливаем всплытие события
+              if (playlist.author?.username) {
+                navigate(`/user/${playlist.author.username}`);
+              }
+            }}
+          >
+            {getAuthorName(playlist)}
+          </span>
           </div>
         </div>
         
@@ -227,4 +232,4 @@ const PlaylistsPage = () => {
   );
 };
 
-export default PlaylistsPage;
+export default PlaylistLibrary;

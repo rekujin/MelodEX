@@ -76,13 +76,34 @@ const ProfilePage = () => {
     try {
       setSaving(true);
 
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error("Файл слишком большой. Максимальный размер 2MB");
+      }
+
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      if (profile.avatar_url) {
+        try {
+          const oldFilePath = profile.avatar_url
+            .split("avatars/")[1]
+            ?.split("?")[0];
+
+          if (oldFilePath) {
+            await supabase.storage.from("avatars").remove([oldFilePath]);
+          }
+        } catch (error) {
+          console.warn("Не удалось удалить старый аватар:", error);
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
       if (uploadError) throw uploadError;
 
@@ -90,16 +111,25 @@ const ProfilePage = () => {
 
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: data.publicUrl })
+        .update({
+          avatar_url: data.publicUrl,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        await supabase.storage.from("avatars").remove([filePath]);
+        throw updateError;
+      }
 
       setProfile((prev) => ({ ...prev, avatar_url: data.publicUrl }));
       setMessage({ type: "success", text: "Аватар обновлен!" });
     } catch (error) {
       console.error("Ошибка при загрузке аватара:", error);
-      setMessage({ type: "error", text: "Не удалось загрузить аватар" });
+      setMessage({
+        type: "error",
+        text: error.message || "Не удалось загрузить аватар",
+      });
     } finally {
       setSaving(false);
     }
@@ -231,11 +261,7 @@ const ProfilePage = () => {
                   message.type === "success" ? "success" : "error"
                 }`}
               >
-                {message.type === "success" ? (
-                  <Check />
-                ) : (
-                  <AlertCircle />
-                )}
+                {message.type === "success" ? <Check /> : <AlertCircle />}
                 <span>{message.text}</span>
               </div>
             )}
@@ -308,11 +334,7 @@ const ProfilePage = () => {
               disabled={saving}
               className="save-button"
             >
-              {saving ? (
-                <div className="loader"></div>
-              ) : (
-                <Save />
-              )}
+              {saving ? <div className="loader"></div> : <Save />}
               {saving ? "Сохранение..." : "Сохранить изменения"}
             </button>
           </div>
