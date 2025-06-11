@@ -1,5 +1,10 @@
+// Icons
 import { Music, Clock, Calendar, User, Album } from "lucide-react";
+
+// Helpers
 import { formatDate, formatDurationMs } from "../../helper/formatters";
+
+import "./PlaylistTracks.css"
 
 export const PlaylistTracks = ({ tracks }) => {
   return (

@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node src/server/server.js",
-    "dev:server": "nodemon src/server/server.js"
+    "dev:server": "nodemon src/server/server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
@@ -24,14 +27,23 @@
     "yandex-music-client": "^0.4.3"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-react": "^7.27.1",
     "@eslint/js": "^9.25.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
+    "babel-jest": "^30.0.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0",
     "nodemon": "^2.0.22",
     "vite": "^6.3.5"
   }

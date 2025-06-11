@@ -1,0 +1,155 @@
+.playlist-avatar-edit {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  background: white;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.playlist-avatar-edit:hover {
+  transform: scale(1.1);
+}
+
+.playlist-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.playlist-title-input,
+.playlist-description-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.playlist-description-input {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.playlist-edit-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.playlist-edit-save-btn,
+.playlist-edit-cancel-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playlist-edit-save-btn {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.playlist-edit-save-btn:hover {
+  background: var(--primary-dark);
+}
+
+.playlist-edit-cancel-btn {
+  background: transparent;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.playlist-edit-cancel-btn:hover {
+  background: #f3f4f6;
+}
+
+.playlist-title:hover .edit-button {
+  opacity: 1;
+}
+
+.edit-button {
+  background: none;
+  border: none;
+  border-radius: 50%;
+  padding: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.3s, transform 0.3s;
+  flex-shrink: 0; /* Prevent button from shrinking */
+  margin-left: auto; /* Push button to the right */
+}
+
+.edit-button:hover {
+  background-color: var(--primary-light);
+  transform: scale(1.1);
+}
+
+.playlist-tag-remove {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.playlist-tag-remove:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.playlist-tag-input-container {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.playlist-tag-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.playlist-tag-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.playlist-tag-add {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.playlist-tag-add-btn:hover {
+  background: #2563eb;
+}
+
+.playlist-tag-add-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}

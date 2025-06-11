@@ -1,6 +1,8 @@
 import { Music } from "lucide-react";
 import TrackRow from "./TrackRow";
 
+import "./PlaylistEditTracks.css"
+
 const PlaylistEditTracks = ({ tracks, onTrackRemove }) => {
   return (
     <div className="playlist-tracks-container">

@@ -40,8 +40,11 @@ export const usePlaylistEditing = (initialPlaylist) => {
     setIsEditing(false);
   };
 
-  const handleEditedDataChange = (newData) => {
-    setEditedData(newData);
+  const handleEditedDataChange = (field, value) => {
+    setEditedData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return {

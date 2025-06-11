@@ -1,52 +1,68 @@
-import { useState } from 'react';
-import { X, Download, CheckCircle, AlertCircle } from 'lucide-react';
-import './CreateModal.css';
+import { useState } from "react";
+
+// Icons
+import { X, Download, CheckCircle, AlertCircle } from "lucide-react";
+
+// Styles
+import "./CreateModal.css";
 
 const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
   const [formState, setFormState] = useState({
-    platform: 'yandex',
-    url: '',
+    platform: "yandex",
+    url: "",
     playlistData: null,
-    error: ''
+    error: "",
   });
 
   const platforms = [
-    { value: 'yandex', label: 'Яндекс.Музыка' },
-    { value: 'spotify', label: 'Spotify' },
-    { value: 'soundcloud', label: 'SoundCloud' }
+    { value: "yandex", label: "Яндекс.Музыка" },
+    { value: "spotify", label: "Spotify" },
+    { value: "soundcloud", label: "SoundCloud" },
   ];
 
   const handleImport = async () => {
     if (!formState.url.trim()) {
-      setFormState(prev => ({ ...prev, error: 'Введите ссылку на плейлист' }));
+      setFormState((prev) => ({
+        ...prev,
+        error: "Введите ссылку на плейлист",
+      }));
       return;
     }
 
-    setFormState(prev => ({ ...prev, isLoading: true, error: '' }));
+    setFormState((prev) => ({ ...prev, isLoading: true, error: "" }));
 
     try {
-      const response = await fetch(`http://localhost:5000/api/${formState.platform}/resolve?url=${encodeURIComponent(formState.url)}`);
+      const response = await fetch(
+        `http://localhost:5000/api/${
+          formState.platform
+        }/resolve?url=${encodeURIComponent(formState.url)}`
+      );
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error?.message || data.error || 'Ошибка при загрузке плейлиста');
+        throw new Error(
+          data.error?.message || data.error || "Ошибка при загрузке плейлиста"
+        );
       }
 
       setFormState({
-        platform: 'yandex',
-        url: '',
+        platform: "yandex",
+        url: "",
         playlistData: {
           ...data.result,
           platform: formState.platform,
-          originalUrl: formState.url // Make sure this is set
+          originalUrl: formState.url,
         },
-        error: ''
+        error: "",
       });
     } catch (err) {
-      console.error('Import error:', err);
-      setFormState(prev => ({ ...prev, error: err.message || 'Ошибка при загрузке плейлиста' }));
+      console.error("Import error:", err);
+      setFormState((prev) => ({
+        ...prev,
+        error: err.message || "Ошибка при загрузке плейлиста",
+      }));
     } finally {
-      setFormState(prev => ({ ...prev, isLoading: false }));
+      setFormState((prev) => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -64,11 +80,11 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
   };
 
   const resetModal = () => {
-    setFormState(prev => ({
-      platform: 'yandex',
-      url: '',
+    setFormState((prev) => ({
+      platform: "yandex",
+      url: "",
       playlistData: null,
-      error: ''
+      error: "",
     }));
   };
 
@@ -82,40 +98,35 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        {/* Header */}
         <div className="modal-header">
-          <button
-            onClick={handleClose}
-            className="close-button"
-          >
+          <button onClick={handleClose} className="close-button">
             <X size={24} />
           </button>
-          <h3>
-            Импорт плейлиста
-          </h3>
+          <h3>Импорт плейлиста</h3>
         </div>
 
         <div>
           {!formState.playlistData ? (
-            // Форма импорта
             <form
               className="import-form"
-              onSubmit={e => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 handleImport();
               }}
             >
-              {/* Селектор платформы */}
               <div>
-                <label className="label">
-                  Платформа
-                </label>
+                <label className="label">Платформа</label>
                 <select
                   value={formState.platform}
-                  onChange={(e) => setFormState(prev => ({ ...prev, platform: e.target.value }))}
+                  onChange={(e) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      platform: e.target.value,
+                    }))
+                  }
                   className="input"
                 >
-                  {platforms.map(p => (
+                  {platforms.map((p) => (
                     <option key={p.value} value={p.value}>
                       {p.label}
                     </option>
@@ -123,21 +134,19 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
                 </select>
               </div>
 
-              {/* Инпут ссылки */}
               <div>
-                <label className="label">
-                  Ссылка на плейлист
-                </label>
+                <label className="label">Ссылка на плейлист</label>
                 <input
                   type="url"
                   value={formState.url}
-                  onChange={(e) => setFormState(prev => ({ ...prev, url: e.target.value }))}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, url: e.target.value }))
+                  }
                   placeholder="Вставьте ссылку на плейлист"
                   className="input"
                 />
               </div>
 
-              {/* Ошибка */}
               {formState.error && (
                 <div className="message error">
                   <AlertCircle />
@@ -145,7 +154,6 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
                 </div>
               )}
 
-              {/* Кнопка импорта */}
               <button
                 type="submit"
                 disabled={formState.isLoading || !formState.url.trim()}
@@ -165,11 +173,12 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
               </button>
             </form>
           ) : (
-            // Превью данных
             <div className="playlist-result">
               <div className="playlist-success-row">
                 <CheckCircle size={20} className="playlist-success-icon" />
-                <span className="playlist-success-text">Плейлист успешно загружен</span>
+                <span className="playlist-success-text">
+                  Плейлист успешно загружен
+                </span>
               </div>
 
               <div className="playlist-preview">
@@ -181,14 +190,19 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
                 </p>
                 <div className="playlist-preview-platform-row">
                   <span className="playlist-preview-platform">
-                    {platforms.find(p => p.value === formState.platform)?.label}
+                    {
+                      platforms.find((p) => p.value === formState.platform)
+                        ?.label
+                    }
                   </span>
                 </div>
               </div>
 
               <div className="playlist-result-actions">
                 <button
-                  onClick={() => setFormState(prev => ({ ...prev, playlistData: null }))}
+                  onClick={() =>
+                    setFormState((prev) => ({ ...prev, playlistData: null }))
+                  }
                   className="playlist-result-back"
                 >
                   Назад

@@ -1,7 +1,10 @@
 import supabase from "../helper/supabaseClient";
 
 export const playlistsApi = {
-  async getRecentPlaylists(limit = 6) {
+  async getRecentPlaylists(limit = 5) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("playlists")
       .select(
@@ -22,10 +25,13 @@ export const playlistsApi = {
       .limit(limit);
 
     if (error) throw error;
-    return data;
+    return this.enrichPlaylistsWithLikes(data, user?.id);
   },
 
-  async getPopularPlaylists(limit = 6) {
+  async getPopularPlaylists(limit = 5) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("playlists")
       .select(
@@ -47,7 +53,7 @@ export const playlistsApi = {
       .limit(limit);
 
     if (error) throw error;
-    return data;
+    return this.enrichPlaylistsWithLikes(data, user?.id);
   },
 
   async getPlaylistById(id) {
@@ -74,8 +80,11 @@ export const playlistsApi = {
     return data;
   },
 
-  async getUserPlaylists(userId) {
-    const { data, error } = await supabase
+  async getUserPlaylists(userId, limit = null) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const query = supabase
       .from("playlists")
       .select(
         `
@@ -93,8 +102,13 @@ export const playlistsApi = {
       .eq("author_id", userId)
       .order("created_at", { ascending: false });
 
+    if (limit) {
+      query.limit(limit);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
-    return data;
+    return this.enrichPlaylistsWithLikes(data, user?.id);
   },
 
   async getLikedPlaylists(userId) {
@@ -187,7 +201,76 @@ export const playlistsApi = {
     await Promise.all(trackPromises);
     return playlist;
   },
-  
+
+  async updatePlaylist(playlistId, playlistData) {
+    const { title, description, cover, tags, tracks } = playlistData;
+
+    const { data: updatedPlaylist, error: playlistError } = await supabase
+      .from("playlists")
+      .update({
+        title,
+        description: description || "",
+        avatar_url: cover || null,
+        tags: tags.length > 0 ? tags : null,
+        updated_at: new Date().toISOString(),
+        track_count: tracks.length,
+      })
+      .eq("id", playlistId)
+      .select()
+      .single();
+
+    if (playlistError) throw playlistError;
+
+    await supabase
+      .from("playlist_tracks")
+      .delete()
+      .eq("playlist_id", playlistId);
+
+    const trackPromises = tracks.map(async (trackItem, index) => {
+      const track = trackItem.track;
+      const { data: existingTrack } = await supabase
+        .from("tracks")
+        .select("id")
+        .eq("title", track.title)
+        .eq("artist", track.artists[0]?.name || "")
+        .maybeSingle();
+
+      let trackId = existingTrack?.id;
+
+      if (!trackId) {
+        const albumValue =
+          track.platform === "soundcloud"
+            ? track.title
+            : track.albums?.[0]?.title || null;
+
+        const { data: insertedTrack, error: trackError } = await supabase
+          .from("tracks")
+          .insert({
+            title: track.title,
+            artist: track.artists[0]?.name || "Unknown Artist",
+            album: albumValue,
+            duration: Math.floor(track.durationMs / 1000),
+            artwork_url: track.cover || null,
+            platform: track.platform,
+          })
+          .select()
+          .single();
+
+        if (trackError) throw trackError;
+        trackId = insertedTrack.id;
+      }
+
+      return supabase.from("playlist_tracks").insert({
+        playlist_id: playlistId,
+        track_id: trackId,
+        position: index + 1,
+      });
+    });
+
+    await Promise.all(trackPromises);
+    return updatedPlaylist;
+  },
+
   async fetchUserLibrary(userId) {
     const { data: created, error: createdError } = await supabase
       .from("playlists")
@@ -208,6 +291,10 @@ export const playlistsApi = {
       .order("created_at", { ascending: false });
 
     if (createdError) throw createdError;
+    const enrichedCreated = await this.enrichPlaylistsWithLikes(
+      created || [],
+      userId
+    );
 
     const { data: liked, error: likedError } = await supabase
       .from("playlist_likes")
@@ -221,6 +308,11 @@ export const playlistsApi = {
       .order("created_at", { ascending: false });
 
     if (likedError) throw likedError;
+    const likedPlaylists =
+      liked?.map((item) => ({
+        ...item.playlists,
+        is_liked: true,
+      })) || [];
 
     const allPlaylists = [
       ...(created || []),
@@ -240,23 +332,22 @@ export const playlistsApi = {
     }, {});
 
     return {
-      created:
-        created?.map((playlist) => ({
-          ...playlist,
-          author: authorsMap[playlist.author_id],
-        })) || [],
-      liked:
-        liked?.map((item) => ({
-          ...item.playlists,
-          author: authorsMap[item.playlists.author_id],
-        })) || [],
+      created: enrichedCreated.map((playlist) => ({
+        ...playlist,
+        author: authorsMap[playlist.author_id],
+      })),
+      liked: likedPlaylists.map((playlist) => ({
+        ...playlist,
+        author: authorsMap[playlist.author_id],
+      })),
     };
   },
 
   async getPlaylistWithTracks(id) {
     const { data: playlistData, error: playlistError } = await supabase
       .from("playlists")
-      .select(`
+      .select(
+        `
         id,
         title,
         description,
@@ -269,7 +360,8 @@ export const playlistsApi = {
         tags,
         playlist_url,
         platform
-      `)
+      `
+      )
       .eq("id", id)
       .single();
 
@@ -316,5 +408,71 @@ export const playlistsApi = {
     const { error } = await supabase.from("playlists").delete().eq("id", id);
 
     if (error) throw error;
+  },
+
+  async togglePlaylistLike(id) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: existingLike } = await supabase
+      .from("playlist_likes")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("playlist_id", id)
+      .maybeSingle();
+
+    if (existingLike) {
+      await supabase
+        .from("playlist_likes")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("playlist_id", id);
+    } else {
+      await supabase
+        .from("playlist_likes")
+        .insert({ user_id: user.id, playlist_id: id });
+    }
+
+    const { data: playlistData } = await supabase
+      .from("playlists")
+      .select("likes_count")
+      .eq("id", id)
+      .single();
+
+    const { data: newLikeStatus } = await supabase
+      .from("playlist_likes")
+      .select()
+      .eq("user_id", user.id)
+      .eq("playlist_id", id)
+      .maybeSingle();
+
+    return {
+      likes_count: playlistData.likes_count,
+      is_liked: !!newLikeStatus,
+    };
+  },
+
+  async enrichPlaylistsWithLikes(playlists, userId) {
+    if (!userId || !playlists.length) return playlists;
+
+    const { data: likes } = await supabase
+      .from("playlist_likes")
+      .select("playlist_id")
+      .eq("user_id", userId)
+      .in(
+        "playlist_id",
+        playlists.map((p) => p.id)
+      );
+
+    const likedPlaylistIds = new Set(
+      likes?.map((like) => like.playlist_id) || []
+    );
+
+    return playlists.map((playlist) => ({
+      ...playlist,
+      is_liked: likedPlaylistIds.has(playlist.id),
+    }));
   },
 };

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { User, Music, Heart } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { User } from "lucide-react";
+import { PlaylistCard } from "../../components/playlist/PlaylistCard";
+import { playlistsApi } from "../../api/playlists";
 import supabase from "../../helper/supabaseClient";
 import "./PublicProfile.css";
+import "../playlists/Playlists.css"
 
 const PublicProfile = () => {
   const { username } = useParams();
-  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,6 @@ const PublicProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Получаем профиль пользователя
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("id, username, avatar_url")
@@ -27,28 +28,11 @@ const PublicProfile = () => {
 
         setProfile(profileData);
 
-        // Получаем плейлисты пользователя (только первые 8)
-        const { data: playlistsData, error: playlistsError } = await supabase
-          .from("playlists")
-          .select(
-            `
-            id,
-            title,
-            description,
-            avatar_url,
-            likes_count,
-            track_count,
-            total_duration,
-            created_at
-          `
-          )
-          .eq("author_id", profileData.id)
-          .order("created_at", { ascending: false })
-          .limit(6);
-
-        if (!playlistsError && playlistsData) {
-          setPlaylists(playlistsData);
-        }
+        const userPlaylists = await playlistsApi.getUserPlaylists(profileData.id, 5);
+        setPlaylists(userPlaylists.map(playlist => ({
+          ...playlist,
+          author: { username: profileData.username }
+        })));
       } catch (err) {
         console.error("Ошибка при загрузке профиля:", err);
         setError(err.message);
@@ -59,50 +43,6 @@ const PublicProfile = () => {
 
     fetchProfile();
   }, [username]);
-
-  const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours}ч ${minutes}м`;
-    }
-    return `${minutes}м`;
-  };
-
-  const PlaylistCard = ({ playlist }) => (
-    <div
-      className="public-playlist-card"
-      onClick={() => navigate(`/playlist/${playlist.id}`)}
-    >
-      <div className="public-playlist-cover">
-        <div className="public-playlist-placeholder">
-          <Music size={24} className="public-playlist-placeholder-icon" />
-        </div>
-        {playlist.avatar_url && (
-          <img src={playlist.avatar_url} alt={playlist.title} />
-        )}
-      </div>
-
-      <div className="public-playlist-info">
-        <h4 className="public-playlist-title">{playlist.title}</h4>
-
-        <div className="public-playlist-meta">
-          <div className="public-playlist-stats">
-            <Heart className="public-playlist-stat-icon" />
-            <span>{playlist.likes_count || 0}</span>
-          </div>
-
-          <div className="public-playlist-stats">
-            {playlist.track_count || 0} треков
-            {playlist.total_duration && (
-              <> • {formatDuration(playlist.total_duration)}</>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -138,7 +78,7 @@ const PublicProfile = () => {
                 />
               ) : (
                 <div className="public-profile-avatar-icon">
-                  <User size={48}/>
+                  <User size={48} />
                 </div>
               )}
             </div>
@@ -148,11 +88,17 @@ const PublicProfile = () => {
         </div>
 
         {playlists.length > 0 && (
-          <div className="public-playlists-section">
-            <h3 className="public-playlists-title">Плейлисты пользователя</h3>
-            <div className="public-playlists-grid">
+          <div className="playlists-section">
+            <h3 className="playlists-title">Плейлисты пользователя</h3>
+            <div className="playlists-grid">
               {playlists.map((playlist) => (
-                <PlaylistCard key={playlist.id} playlist={playlist} />
+                <PlaylistCard
+                  key={playlist.id}
+                  playlist={{
+                    ...playlist,
+                    author: { username: profile.username },
+                  }}
+                />
               ))}
             </div>
           </div>

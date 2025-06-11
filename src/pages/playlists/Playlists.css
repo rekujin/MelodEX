@@ -1,0 +1,219 @@
+/* Контейнер секции плейлистов */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.playlists-section {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.playlists-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(17, 24, 39);
+  margin-bottom: 1rem;
+}
+
+/* Сетка плейлистов */
+.playlists-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (mind-width: 480px) {
+  .playlist-heart-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (min-width: 640px) {
+  .playlists-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .playlists-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .playlists-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Карточка плейлиста */
+.playlists-card {
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: transform 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+
+/* Обложка плейлиста */
+.playlists-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 170px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playlist-avatar-fallback {
+  color: #fff;
+  width: 36px;
+  height: 36px;
+}
+
+.playlists-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Информация о плейлисте */
+.playlists-card-info {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.playlists-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlists-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.playlists-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 50%;
+  min-width: 0;
+}
+
+.playlist-heart-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 2px;
+  transition: all 0.2s ease;
+}
+
+.playlist-heart-icon.is-liked {
+  fill: #ef4444;
+  stroke: #ef4444;
+}
+
+.playlist-heart-icon:hover {
+  fill: #ef4444;
+  stroke: #ef4444;
+  transform: scale(1.1);
+}
+
+.playlist-user-icon {
+  width: 18px;
+  height: 18px;
+  transition: color 0.2s;
+  flex-shrink: 0; /* Предотвращает сжатие иконки */
+}
+
+.playlists-meta-item:hover .playlists-meta-author,
+.playlists-meta-item:hover .playlist-user-icon {
+  color: var(--primary-dark);
+}
+
+.playlists-meta-author {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.playlists-meta-author:hover {
+  color: var(--primary-dark);
+}
+
+.playlists-card-stats {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-left: auto;
+  text-align: right;
+}
+
+/* Состояния загрузки и пустого списка */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 0;
+  color: #6b7280;
+}
+
+.empty-state-icon {
+  color: #9ca3af;
+  margin: 0 auto 1rem;
+}
+
+/* Специфичные стили для библиотеки плейлистов */
+.playlists-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-radius: var(--border-radius-md);
+  width: fit-content;
+  margin-bottom: 1.5rem;
+}
+
+.playlists-tab {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-normal);
+}
+
+.playlists-tab.active {
+  background-color: white;
+  color: #7c3aed;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}

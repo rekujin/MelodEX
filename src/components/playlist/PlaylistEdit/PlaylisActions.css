@@ -1,0 +1,67 @@
+.playlist-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 0 0 0;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  backdrop-filter: blur(3px);
+  z-index: 50;
+}
+
+.playlist-cancel-btn {
+  min-width: 120px;
+  padding: 12px 24px;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  border-radius: var(--border-radius-md);
+  background: #fff;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.playlist-cancel-btn:hover {
+  background: #f3f4f6;
+}
+
+.playlist-save-btn {
+  min-width: 120px;
+  padding: 12px 24px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: var(--border-radius-md);
+  border: none;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.playlist-save-btn:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 768px) and (min-width: 481px) {
+  .playlist-actions {
+    margin: 0 0 60px 0;
+    padding: 10px;
+  }
+
+  .playlist-cancel-btn,
+  .playlist-save-btn {
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlist-actions {
+    margin: 0 0 60px 0;
+        padding: 10px;
+  }
+
+    .playlist-cancel-btn,
+  .playlist-save-btn {
+    padding: 6px 12px;
+  }
+}

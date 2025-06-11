@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { playlistsApi } from "../../api/playlists";
 import { LoadingSpinner } from "../../components/ui/LoadingSpinner";
 import { useToast } from "../../context/ToastContext";
+import supabase from "../../helper/supabaseClient";
 
 // Components
 import PlaylistEditHeader from "../../components/playlist/PlaylistEdit/PlaylistEditHeader";
@@ -11,8 +12,6 @@ import PlaylistActions from "../../components/playlist/PlaylistEdit/PlaylisActio
 import SavingOverlay from "../../components/playlist/PlaylistEdit/SavingOverlay";
 
 // Hooks
-import { usePlaylistTags } from "../../hooks/usePlaylistTags";
-import { usePlaylistEditing } from "../../hooks/usePlaylistEditing";
 import { useAuth } from "../../hooks/useAuth";
 import { useFormValidation } from "../../hooks/useFormValidation";
 
@@ -28,34 +27,24 @@ const CreatePlaylist = () => {
 
   const [currentPlaylist, setCurrentPlaylist] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [tags, setTags] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
 
   // Константы
   const MAX_TAGS = 8;
   const TAG_MAX_LENGTH = 24;
 
-  // Хуки для тегов и редактирования
-  const {
-    tags,
-    newTag,
-    setTags,
-    handleTagAdd,
-    handleTagInputChange,
-    handleTagRemove,
-  } = usePlaylistTags(MAX_TAGS, TAG_MAX_LENGTH);
-
-  const {
-    isEditing,
-    editedData,
-    handleEditStart,
-    handleEditSave,
-    handleEditCancel,
-    handleEditedDataChange,
-  } = usePlaylistEditing(currentPlaylist);
-
-  // Инициализация плейлиста
   useEffect(() => {
     if (importedPlaylist) {
-      setCurrentPlaylist(importedPlaylist);
+      setCurrentPlaylist({
+        ...importedPlaylist,
+        id: importedPlaylist.id,
+        cover: importedPlaylist.avatar_url,
+        trackCount:
+          importedPlaylist.track_count || importedPlaylist.tracks?.length || 0,
+        tracks: importedPlaylist.tracks || [],
+      });
+      setTags(importedPlaylist.tags || []);
     } else {
       setCurrentPlaylist({
         title: "None",
@@ -66,14 +55,12 @@ const CreatePlaylist = () => {
     }
   }, [importedPlaylist]);
 
-  // Редирект если нет импортированного плейлиста
   useEffect(() => {
-    if (!importedPlaylist) {
+    if (!importedPlaylist && location.pathname.includes("edit")) {
       navigate("/", { replace: true });
     }
-  }, [importedPlaylist, navigate]);
+  }, [importedPlaylist, navigate, location]);
 
-  // Валидация формы
   const { values, errors, handleChange, validateForm } = useFormValidation(
     {
       title: currentPlaylist?.title || "",
@@ -103,18 +90,40 @@ const CreatePlaylist = () => {
     });
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const handleImageUpload = ({ file, previewUrl }) => {
+    setImageFile(file);
+    setCurrentPlaylist({
+      ...currentPlaylist,
+      cover: previewUrl,
+    });
+  };
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCurrentPlaylist({
-        ...currentPlaylist,
-        cover: reader.result,
-      });
-    };
-    reader.readAsDataURL(file);
+  const uploadPlaylistCover = async () => {
+    if (!imageFile) return null;
+
+    try {
+      const fileExt = imageFile.name.split(".").pop();
+      const fileName = `${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`; // Добавляем id пользователя как первую часть пути
+
+      const { error: uploadError } = await supabase.storage
+        .from("playlist-covers")
+        .upload(filePath, imageFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("playlist-covers")
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Ошибка при загрузке обложки:", error);
+      throw new Error("Не удалось загрузить обложку плейлиста");
+    }
   };
 
   const handleSavePlaylist = async () => {
@@ -124,7 +133,7 @@ const CreatePlaylist = () => {
     }
 
     if (!currentPlaylist.tracks || currentPlaylist.tracks.length === 0) {
-      showToast("В вашем плейлисе отсутствуют треки", "error");
+      showToast("В вашем плейлисте отсутствуют треки", "error");
       navigate("/");
       return;
     }
@@ -134,18 +143,28 @@ const CreatePlaylist = () => {
     try {
       if (!user) throw new Error("Вы не авторизованы");
 
-      await playlistsApi.createPlaylist(
-        {
-          ...currentPlaylist,
-          title: currentPlaylist.title,
-          description: currentPlaylist.description,
-          cover: currentPlaylist.cover,
-          tags,
-        },
-        user.id
-      );
+      let coverUrl = currentPlaylist.cover;
+      if (imageFile) {
+        coverUrl = await uploadPlaylistCover();
+      }
 
-      showToast("Плейлист успешно создан", "success");
+      const playlistData = {
+        ...currentPlaylist,
+        title: currentPlaylist.title,
+        description: currentPlaylist.description,
+        avatar_url: coverUrl,
+        track_count: currentPlaylist.trackCount,
+        tags,
+      };
+
+      if (currentPlaylist.id) {
+        await playlistsApi.updatePlaylist(currentPlaylist.id, playlistData);
+        showToast("Плейлист успешно обновлен", "success");
+      } else {
+        await playlistsApi.createPlaylist(playlistData, user.id);
+        showToast("Плейлист успешно создан", "success");
+      }
+
       navigate("/playlists");
     } catch (error) {
       console.error(error);
@@ -165,21 +184,13 @@ const CreatePlaylist = () => {
     <div className="playlist-root">
       <PlaylistEditHeader
         currentPlaylist={currentPlaylist}
-        isEditing={isEditing}
-        editedData={editedData}
         tags={tags}
-        newTag={newTag}
         maxTags={MAX_TAGS}
         tagMaxLength={TAG_MAX_LENGTH}
         onNavigateBack={handleNavigateBack}
         onImageUpload={handleImageUpload}
-        onEditStart={handleEditStart}
-        onEditSave={() => handleEditSave(handlePlaylistEditSave)}
-        onEditCancel={handleEditCancel}
-        onEditedDataChange={handleEditedDataChange}
-        onTagAdd={handleTagAdd}
-        onTagRemove={handleTagRemove}
-        onTagInputChange={handleTagInputChange}
+        onEditSave={handlePlaylistEditSave}
+        onTagsChange={setTags}
       />
 
       <PlaylistEditTracks

@@ -1,6 +1,8 @@
 import { Music, User, Album, Calendar, Clock, Trash2 } from "lucide-react";
 import { formatDurationMs, formatDate } from "../../../helper/formatters";
 
+import "./TrackRow.css"
+
 const TrackRow = ({ item, index, onRemove }) => {
   const { track } = item;
 

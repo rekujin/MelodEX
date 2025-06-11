@@ -1,0 +1,14 @@
+.playlist-empty {
+  padding: 48px 0;
+  text-align: center;
+}
+.playlist-empty-icon {
+  color: #d1d5db;
+  margin: auto;
+  margin-bottom: 16px;
+  width: 48px;
+  height: 48px;
+}
+.playlist-empty-text {
+  color: #6b7280;
+}

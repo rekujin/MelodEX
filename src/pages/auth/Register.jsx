@@ -1,69 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Register.css";
 import supabase from "../../helper/supabaseClient";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
-
-const translateSupabaseError = (error) => {
-  if (!error?.message) return "Произошла ошибка при регистрации";
-
-  const msg = error.message.toLowerCase();
-
-  if (
-    msg.includes("user already registered") ||
-    msg.includes("user already exists")
-  )
-    return "Пользователь с таким email уже зарегистрирован";
-  if (msg.includes("invalid email")) return "Некорректный email";
-  if (msg.includes("password should be at least"))
-    return "Пароль слишком короткий";
-  if (msg.includes("email rate limit"))
-    return "Слишком много попыток. Попробуйте позже.";
-  if (msg.includes("unable to validate email address: invalid format"))
-    return "Некорректный формат email.";
-  if (
-    msg.includes(
-      'duplicate key value violates unique constraint "profiles_username_key"'
-    )
-  )
-    return "Имя пользователя уже занято.";
-  if (msg.includes("database error saving new user"))
-    return "Имя пользователя уже занято.";
-
-  return error.message;
-};
-
-const VALIDATION = {
-  EMAIL_REGEX: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  PASSWORD_REGEX: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
-  USERNAME_REGEX: /^[a-zA-Z0-9_]+$/,
-  CYRILLIC_REGEX: /[а-яА-ЯёЁ]/,
-  MIN_PASSWORD_LENGTH: 8,
-  MIN_USERNAME_LENGTH: 3,
-};
-
-const checkPasswordStrength = (password) => {
-  if (!password) return 0;
-
-  const hasMinLength = password.length >= VALIDATION.MIN_PASSWORD_LENGTH;
-  const hasLowercase = /[a-z]/.test(password);
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
-
-  // Базовые требования, чтобы пройти валидацию
-  if (!hasMinLength || !(hasLowercase || hasUppercase) || !hasNumber) return 0;
-
-  let strength = 1; // Дефф сила
-
-  // Дополнительные баллы за улучшения
-  if (password.length >= 12) strength += 1; // +1 за длину
-  if (hasUppercase) strength += 1; // +1 за заглавные
-  if (hasSpecialChar) strength += 1; // +1 за спецсимволы
-  if (hasLowercase && hasUppercase) strength += 1; // +1 за смешанный регистр
-
-  // Макс 4 балла
-  return Math.min(strength, 4);
-};
+import AuthForm from "../../components/auth/AuthForm";
+import { VALIDATION, checkPasswordStrength, translateSupabaseError } from "../../utils/validation";
 
 const FIELDS = {
   email: {
@@ -100,79 +40,50 @@ const FIELDS = {
       if (VALIDATION.CYRILLIC_REGEX.test(val))
         return "Пароль не может содержать русские символы";
       if (!VALIDATION.PASSWORD_REGEX.test(val))
-        return "Пароль должен содержать минимум 8 символов, включая буквы и цифры";
+        return "Пароль должен содержать минимум 8 символов, включая заглавные и строчные буквы, цифры и специальные символы";
       return null;
     },
+    extraContent: (value) => value && (
+      <div className="password-strength">
+        <div className={`strength-bar strength-${checkPasswordStrength(value)}`} />
+        <span>
+          Сложность пароля:{" "}
+          {["Слабый", "Средний", "Хороший", "Сильный"][
+            checkPasswordStrength(value) - 1
+          ] || "Очень слабый"}
+        </span>
+      </div>
+    ),
   },
 };
 
 function Register() {
-  const [formData, setFormData] = useState({
-    email: "",
-    username: "",
-    password: "",
-  });
+  const navigate = useNavigate();
   const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const handleInputChange = (field, value) => {
-    if (field !== "username" && VALIDATION.CYRILLIC_REGEX.test(value)) return;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (field === "password") {
-      setPasswordStrength(checkPasswordStrength(value));
-    }
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({ ...prev, [field]: null }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const errors = {};
-    let hasErrors = false;
-
-    for (const field of Object.keys(FIELDS)) {
-      const error = FIELDS[field].validate(formData[field]);
-      if (error) {
-        errors[field] = error;
-        hasErrors = true;
-      }
-    }
-
-    if (hasErrors) {
-      setFieldErrors(errors);
-
-      const firstErrorField = Object.keys(errors).find(
-        (field) => errors[field]
-      );
-      setMessage({ text: errors[firstErrorField], type: "error" });
-      return;
-    }
-
+  const handleSubmit = async (formData) => {
     setIsLoading(true);
     try {
-      const { error: signUpError, data } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: { data: { username: formData.username } },
       });
 
-      if (signUpError) throw signUpError;
+      if (error) throw error;
 
       setMessage({
         text: "Аккаунт создан! Проверьте почту для подтверждения.",
         type: "success",
       });
-      setFormData({ email: "", username: "", password: "" });
-      setFieldErrors({});
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (error) {
       setMessage({
-        text:
-          translateSupabaseError(error) || "Произошла ошибка при регистрации",
+        text: translateSupabaseError(error),
         type: "error",
       });
     } finally {
@@ -181,64 +92,14 @@ function Register() {
   };
 
   return (
-    <div className="auth-container">
-      <h2>Регистрация</h2>
-      {message.text && (
-        <div className={`message ${message.type}`}>{message.text}</div>
-      )}
-      <form onSubmit={handleSubmit} noValidate>
-        {Object.entries(FIELDS).map(([field, config]) => (
-          <div className="form-group" key={field}>
-            <div className="input-wrapper">
-              <input
-                id={field}
-                type={
-                  field === "password"
-                    ? showPassword
-                      ? "text"
-                      : "password"
-                    : config.type
-                }
-                value={formData[field]}
-                onChange={(e) => handleInputChange(field, e.target.value)}
-                placeholder={config.placeholder}
-                className={fieldErrors[field] ? "input-error" : ""}
-                data-ispassword={field === "password"}
-              />
-              <label htmlFor={field}>{config.label}</label>
-              {field === "email" && <Mail className="input-icon" />}
-              {field === "username" && <User className="input-icon" />}
-              {field === "password" && (
-                <>
-                  <Lock className="input-icon" />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="toggle-password"
-                  >
-                    {showPassword ? <EyeOff className="login-eye-off-icon"/> : <Eye className="login-eye-icon"/>}
-                  </button>
-                </>
-              )}
-            </div>
-            {field === "password" && formData.password && (
-              <div className="password-strength">
-                <div className={`strength-bar strength-${passwordStrength}`} />
-                <span>
-                  Сложность пароля:{" "}
-                  {["Слабый", "Средний", "Хороший", "Сильный"][
-                    passwordStrength - 1
-                  ] || "Очень слабый"}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-        <button type="submit" disabled={isLoading} className="submit-btn">
-          {isLoading ? "Отправка..." : "Зарегистрироваться"}
-        </button>
-      </form>
-    </div>
+    <AuthForm
+      title="Регистрация"
+      fields={FIELDS}
+      onSubmit={handleSubmit}
+      submitButtonText="Зарегистрироваться"
+      isLoading={isLoading}
+      message={message}
+    />
   );
 }
 

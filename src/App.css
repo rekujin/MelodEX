@@ -1,6 +1,5 @@
 /* App.css - Основные стили для структуры приложения */
 
-/* Основной контейнер приложения */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -8,7 +7,6 @@
   background-color: var(--bg-light);
 }
 
-/* Контейнер для содержимого страницы */
 .page-container {
   padding-top: 80px;
   width: 100%;
@@ -19,7 +17,6 @@
   flex: 1;
 }
 
-/* Стили для основных контейнеров страниц */
 .auth-container {
   max-width: 450px;
   margin: var(--spacing-xl) auto;
@@ -35,10 +32,18 @@
   color: var(--text-dark);
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
+  .app-container,
+  .main-content {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
   .page-container {
     padding-top: 70px;
+  }
+
+  .page-content {
+    margin-bottom: calc(70px + env(safe-area-inset-bottom));
   }
   
   .auth-container {
@@ -49,10 +54,6 @@
 }
 
 @media (max-width: 480px) {
-  .page-container {
-    padding-top: 60px;
-  }
-  
   .auth-container {
     margin: var(--spacing-md) 0;
     padding: var(--spacing-md);

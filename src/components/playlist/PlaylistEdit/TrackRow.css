@@ -1,0 +1,23 @@
+.track-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.track-remove:hover {
+  background: var(--bg-error);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.playlist-table-row:hover .track-remove {
+  opacity: 1;
+}

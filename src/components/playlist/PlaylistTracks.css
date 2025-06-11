@@ -1,0 +1,144 @@
+.playlist-tracks-container {
+  margin: 0 auto;
+  padding: 24px 0px;
+  padding-bottom: 80px;
+}
+
+.playlist-tracks-box {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.playlist-tracks-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.playlist-tracks-title {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.playlist-table-wrapper {
+  overflow-x: auto;
+}
+
+.playlist-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.playlist-table th,
+.playlist-table td {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 0.97rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.playlist-table th {
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.playlist-table th:last-child,
+.playlist-table td:last-child {
+  text-align: center;
+}
+
+.playlist-table-row:hover {
+  background: #f3f4f6;
+  transition: background 0.2s;
+}
+
+.playlist-track-cover {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.playlist-track-cover.has-image {
+  background: none;
+}
+
+.playlist-track-cover.has-image img {
+  border: 1px solid #e0e0e0;
+  border-radius: var(--border-radius-md);
+  box-sizing: border-box;
+}
+
+.playlist-track-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.playlist-track-cover-icon {
+  color: #6b7280;
+  width: 16px;
+  height: 16px;
+}
+
+.playlist-track-title {
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  word-spacing: -2px;
+}
+
+.playlist-track-artist,
+.playlist-track-album,
+.playlist-track-date,
+.playlist-track-duration {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+  font-size: 0.97rem;
+  min-width: 0;
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.playlist-track-duration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.97rem;
+  min-width: 0;
+}
+
+.playlist-track-artist span,
+.playlist-track-album span,
+.playlist-track-date span,
+.playlist-track-duration span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  max-width: 140px;
+  vertical-align: middle;
+  word-spacing: -2px;
+}

@@ -7,24 +7,68 @@ import {
   Camera,
   AlertCircle,
   Check,
+  EyeOff,
+  Eye,
 } from "lucide-react";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { VALIDATION } from "../../utils/validation";
 import supabase from "../../helper/supabaseClient";
-import "./Profile.css";
 import { useAuth } from "../../hooks/useAuth";
 
+import "./Profile.css";
+
 const ProfilePage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const validationRules = {
+    username: (value) => {
+      if (!value) return "Имя пользователя обязательно";
+      if (value.length < VALIDATION.MIN_USERNAME_LENGTH)
+        return `Минимум ${VALIDATION.MIN_USERNAME_LENGTH} символа`;
+      if (!VALIDATION.USERNAME_REGEX.test(value))
+        return "Только латинские буквы, цифры и _";
+      if (VALIDATION.CYRILLIC_REGEX.test(value))
+        return "Кириллица не допускается";
+      return null;
+    },
+    email: (value) => {
+      if (!value) return "Email обязателен";
+      if (!VALIDATION.EMAIL_REGEX.test(value)) return "Некорректный email";
+      return null;
+    },
+    newPassword: (value) => {
+      if (!value) return null; // пароль не обязателен при обновлении
+      if (value.length < VALIDATION.MIN_PASSWORD_LENGTH)
+        return `Минимум ${VALIDATION.MIN_PASSWORD_LENGTH} символов`;
+      if (!VALIDATION.PASSWORD_REGEX.test(value))
+        return "Требуется заглавная буква, цифра и спецсимвол";
+      return null;
+    },
+    confirmPassword: (value) => {
+      if (formValidation.values.newPassword && !value)
+        return "Подтвердите пароль";
+      if (value !== formValidation.values.newPassword)
+        return "Пароли не совпадают";
+      return null;
+    },
+  };
+
+  const formValidation = useFormValidation(
+    {
+      username: "",
+      email: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    validationRules
+  );
 
   useEffect(() => {
     if (user) {
@@ -48,12 +92,10 @@ const ProfilePage = () => {
       if (profileError) throw profileError;
 
       setProfile(profile);
-      setFormData({
-        username: profile.username || "",
-        email: user.email || "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+      formValidation.handleChange("username", profile.username || "");
+      formValidation.handleChange("email", user.email || "");
+      formValidation.handleChange("newPassword", "");
+      formValidation.handleChange("confirmPassword", "");
     } catch (error) {
       console.error("Ошибка при загрузке профиля:", error);
       setMessage({ type: "error", text: "Не удалось загрузить профиль" });
@@ -63,10 +105,7 @@ const ProfilePage = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    formValidation.handleChange(field, value);
   };
 
   const handleAvatarUpload = async (event) => {
@@ -137,64 +176,84 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      setSaving(true);
-      setMessage({ type: "", text: "" });
-
-      if (
-        formData.newPassword &&
-        formData.newPassword !== formData.confirmPassword
-      ) {
-        setMessage({ type: "error", text: "Пароли не совпадают" });
-        return;
-      }
-
-      if (formData.newPassword && formData.newPassword.length < 6) {
+      if (!formValidation.validateForm()) {
         setMessage({
           type: "error",
-          text: "Пароль должен содержать минимум 6 символов",
+          text: "Пожалуйста, исправьте ошибки в форме",
         });
         return;
       }
 
-      if (formData.username !== profile.username) {
+      setSaving(true);
+      setMessage({ type: "", text: "" });
+
+      const { username, email, newPassword } = formValidation.values;
+
+      if (username !== profile.username) {
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ username: formData.username })
+          .update({ username })
           .eq("id", user.id);
 
-        if (profileError) throw profileError;
+        if (profileError)
+          throw new Error("Ошибка при обновлении имени пользователя");
       }
 
       const updateData = {};
-      if (formData.email !== user.email) {
-        updateData.email = formData.email;
+      if (email !== user.email) {
+        updateData.email = email;
       }
-      if (formData.newPassword) {
-        updateData.password = formData.newPassword;
+      if (newPassword) {
+        updateData.password = newPassword;
       }
 
       if (Object.keys(updateData).length > 0) {
         const { error: authError } = await supabase.auth.updateUser(updateData);
-        if (authError) throw authError;
+        if (authError) {
+          if (authError.message.includes("email")) {
+            throw new Error(
+              "Ошибка при изменении email. Возможно, такой email уже существует"
+            );
+          }
+          if (authError.message.includes("password")) {
+            throw new Error(
+              "Ошибка при изменении пароля. Попробуйте другой пароль"
+            );
+          }
+          throw new Error("Ошибка при обновлении профиля");
+        }
       }
 
-      setMessage({ type: "success", text: "Профиль успешно обновлен!" });
+      if (updateData.email) {
+        setMessage({
+          type: "success",
+          text: "На вашу почту отправлено письмо для подтверждения.",
+        });
+      } else {
+        setMessage({ type: "success", text: "Профиль успешно обновлен!" });
+      }
 
-      setFormData((prev) => ({
-        ...prev,
-        newPassword: "",
-        confirmPassword: "",
-      }));
+      formValidation.handleChange("newPassword", "");
+      formValidation.handleChange("confirmPassword", "");
 
       await loadUserProfile();
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
       setMessage({
         type: "error",
-        text: error.message || "Не удалось сохранить изменения",
+        text: error.message || "Произошла ошибка при обновлении профиля",
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error logging out:", error);
+      setMessage({ type: "error", text: "Ошибка при выходе из системы" });
     }
   };
 
@@ -271,15 +330,17 @@ const ProfilePage = () => {
                 <User className="input-icon" />
                 <input
                   type="text"
-                  value={formData.username}
-                  onChange={(e) =>
-                    handleInputChange("username", e.target.value)
-                  }
+                  value={formValidation.values.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  className={formValidation.errors.username ? "error" : ""}
                   id="username"
                   required
                 />
                 <label htmlFor="username">Имя пользователя</label>
               </div>
+              {formValidation.errors.username && (
+                <div className="error-message">{formValidation.errors.username}</div>
+              )}
             </div>
 
             <div className="form-group">
@@ -287,45 +348,79 @@ const ProfilePage = () => {
                 <Mail className="input-icon" />
                 <input
                   type="email"
-                  value={formData.email}
+                  value={formValidation.values.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  className={formValidation.errors.email ? "error" : ""}
                   id="email"
                   required
                 />
                 <label htmlFor="email">Email</label>
               </div>
+              {formValidation.errors.email && (
+                <div className="error-message">{formValidation.errors.email}</div>
+              )}
             </div>
 
             <div className="form-group">
               <div className="input-wrapper">
                 <Lock className="input-icon" />
                 <input
-                  type="password"
-                  value={formData.newPassword}
+                  type={showPassword ? "text" : "password"}
+                  value={formValidation.values.newPassword}
                   onChange={(e) =>
                     handleInputChange("newPassword", e.target.value)
                   }
+                  className={formValidation.errors.newPassword ? "error" : ""}
                   id="newPassword"
                 />
                 <label htmlFor="newPassword">Новый пароль</label>
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <Eye className="login-eye-icon" />
+                  ) : (
+                    <EyeOff className="login-eye-off-icon" />
+                  )}
+                </button>
               </div>
+              {formValidation.errors.newPassword && (
+                <div className="error-message">{formValidation.errors.newPassword}</div>
+              )}
             </div>
 
-            {formData.newPassword && (
+            {formValidation.values.newPassword && (
               <div className="form-group">
                 <div className="input-wrapper">
                   <Lock className="input-icon" />
                   <input
-                    type="password"
-                    value={formData.confirmPassword}
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formValidation.values.confirmPassword}
                     onChange={(e) =>
                       handleInputChange("confirmPassword", e.target.value)
                     }
+                    className={formValidation.errors.confirmPassword ? "error" : ""}
                     id="confirmPassword"
                     required
                   />
                   <label htmlFor="confirmPassword">Подтвердите пароль</label>
+                  <button
+                    type="button"
+                    className="toggle-password"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <Eye className="login-eye-icon" />
+                    ) : (
+                      <EyeOff className="login-eye-off-icon" />
+                    )}
+                  </button>
                 </div>
+                {formValidation.errors.confirmPassword && (
+                  <div className="error-message">{formValidation.errors.confirmPassword}</div>
+                )}
               </div>
             )}
 
@@ -335,7 +430,15 @@ const ProfilePage = () => {
               className="save-button"
             >
               {saving ? <div className="loader"></div> : <Save />}
-              {saving ? "Сохранение..." : "Сохранить изменения"}
+              {saving ? "Сохранение..." : "Сохранить"}
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="logout-button"
+              disabled={saving}
+            >
+              Выйти
             </button>
           </div>
         </div>

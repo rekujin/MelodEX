@@ -1,13 +1,52 @@
-import { Heart, Music, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { formatDuration } from '../../helper/formatters';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Heart, Music, User } from "lucide-react";
+import { playlistsApi } from "../../api/playlists";
 
-export const PlaylistCard = ({ playlist }) => {
+import "../../pages/playlists/Playlists.css";
+
+export const PlaylistCard = ({ playlist, onLikeToggle }) => {
   const navigate = useNavigate();
-  const authorName = playlist.author?.username || 'Неизвестный автор';
+  const authorName = playlist.author?.username || "Неизвестный автор";
+  const [likesCount, setLikesCount] = useState(playlist.likes_count || 0);
+  const [isLiked, setIsLiked] = useState(playlist.is_liked || false);
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
+  const handleLikeClick = async (e) => {
+    e.stopPropagation();
+    if (isLikeProcessing) return;
+
+    const originalLikesCount = likesCount;
+    const originalIsLiked = isLiked;
+
+    // Оптимистичное обновление
+    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1);
+    setIsLiked(!isLiked);
+    setIsLikeProcessing(true);
+
+    try {
+      const result = await playlistsApi.togglePlaylistLike(playlist.id);
+      setLikesCount(result.likes_count);
+      setIsLiked(result.is_liked);
+
+      if (onLikeToggle) {
+        onLikeToggle({
+          ...playlist,
+          likes_count: result.likes_count,
+          is_liked: result.is_liked,
+        });
+      }
+
+    } catch (error) {
+      setLikesCount(originalLikesCount);
+      setIsLiked(originalIsLiked);
+    } finally {
+      setIsLikeProcessing(false);
+    }
+  };
 
   return (
-    <div 
+    <div
       className="playlists-card"
       onClick={() => navigate(`/playlist/${playlist.id}`)}
     >
@@ -15,21 +54,24 @@ export const PlaylistCard = ({ playlist }) => {
         {playlist.avatar_url ? (
           <img src={playlist.avatar_url} alt={playlist.title} />
         ) : (
-          <Music className="w-12 h-12 text-white" />
+          <Music className="playlist-avatar-fallback" />
         )}
       </div>
-      
+
       <div className="playlists-card-info">
         <h4 className="playlists-card-title">{playlist.title}</h4>
-        
+
         <div className="playlists-card-meta">
           <div className="playlists-meta-item">
-            <Heart className="w-4 h-4" />
-            <span>{playlist.likes_count || 0}</span>
+            <Heart
+              className={`playlist-heart-icon ${isLiked ? "is-liked" : ""}`}
+              onClick={handleLikeClick}
+            />
+            <span>{likesCount}</span>
           </div>
-          
+
           <div className="playlists-meta-item">
-            <User className="w-4 h-4" />
+            <User className="playlist-user-icon" />
             <span
               className="playlists-meta-author"
               onClick={(e) => {
@@ -43,12 +85,9 @@ export const PlaylistCard = ({ playlist }) => {
             </span>
           </div>
         </div>
-        
+
         <div className="playlists-card-stats">
           {playlist.track_count || 0} треков
-          {playlist.total_duration && (
-            <> • {formatDuration(playlist.total_duration)}</>
-          )}
         </div>
       </div>
     </div>

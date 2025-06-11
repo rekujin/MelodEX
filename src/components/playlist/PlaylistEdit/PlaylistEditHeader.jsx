@@ -1,24 +1,118 @@
-import { ArrowLeft, Music, Calendar, Edit2, X, Check, Plus } from "lucide-react";
-import { getPlatformColorClass, getPlatformName } from "../../../helper/formatters";
+import {
+  ArrowLeft,
+  Music,
+  Calendar,
+  Edit2,
+  X,
+  Check,
+  Plus,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  getPlatformColorClass,
+  getPlatformName,
+} from "../../../helper/formatters";
+
+import "./PlaylistEditHeader.css";
+import "../PlaylistHeader.css";
 
 const PlaylistEditHeader = ({
   currentPlaylist,
-  isEditing,
-  editedData,
-  tags,
-  newTag,
+  tags: initialTags = [],
   maxTags,
   tagMaxLength,
   onNavigateBack,
   onImageUpload,
-  onEditStart,
   onEditSave,
-  onEditCancel,
-  onEditedDataChange,
-  onTagAdd,
-  onTagRemove,
-  onTagInputChange,
+  onTagsChange,
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({
+    title: currentPlaylist.title || "",
+    description: currentPlaylist.description || "",
+  });
+  const [tags, setTags] = useState(initialTags);
+  const [newTag, setNewTag] = useState("");
+
+  const handleEditStart = () => {
+    setIsEditing(true);
+    setEditedData({
+      title: currentPlaylist.title || "",
+      description: currentPlaylist.description || "",
+    });
+  };
+
+    const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error("Файл слишком большой. Максимальный размер 2MB");
+      }
+
+      // Создаем превью для отображения
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onImageUpload({
+          file,
+          previewUrl: reader.result
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Ошибка при загрузке картинки:", error);
+      // Здесь можно добавить отображение ошибки пользователю
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditedData({
+      title: currentPlaylist.title || "",
+      description: currentPlaylist.description || "",
+    });
+    setIsEditing(false);
+  };
+
+  const handleSave = () => {
+    onEditSave(editedData);
+    setIsEditing(false);
+  };
+
+  const handleTagAdd = () => {
+    const trimmedTag = newTag?.trim();
+    if (trimmedTag && tags.length < maxTags) {
+      const updatedTags = [...tags, trimmedTag];
+      setTags(updatedTags);
+      setNewTag("");
+      requestAnimationFrame(() => {
+        onTagsChange(updatedTags);
+      });
+    }
+  };
+
+  const handleTagRemove = (tagToRemove) => {
+    const updatedTags = tags.filter(tag => tag !== tagToRemove);
+    setTags(updatedTags);
+    requestAnimationFrame(() => {
+      onTagsChange(updatedTags);
+    });
+  };
+
+  const handleTagInputChange = (e) => {
+    const value = e.target.value || "";
+    if (value.length <= tagMaxLength) {
+      setNewTag(value);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && newTag?.trim()) {
+      e.preventDefault();
+      handleTagAdd();
+    }
+  };
+
   return (
     <div className="playlist-header">
       <div className="playlist-header-inner">
@@ -54,7 +148,7 @@ const PlaylistEditHeader = ({
               <input
                 type="file"
                 accept="image/*"
-                onChange={onImageUpload}
+                onChange={handleImageUpload}
                 className="hidden"
               />
             </label>
@@ -77,7 +171,10 @@ const PlaylistEditHeader = ({
                   type="text"
                   value={editedData.title}
                   onChange={(e) =>
-                    onEditedDataChange({ ...editedData, title: e.target.value })
+                    setEditedData(prev => ({
+                      ...prev,
+                      title: e.target.value
+                    }))
                   }
                   className="playlist-title-input"
                   placeholder="Название плейлиста"
@@ -85,24 +182,24 @@ const PlaylistEditHeader = ({
                 <textarea
                   value={editedData.description}
                   onChange={(e) =>
-                    onEditedDataChange({
-                      ...editedData,
-                      description: e.target.value,
-                    })
+                    setEditedData(prev => ({
+                      ...prev,
+                      description: e.target.value
+                    }))
                   }
                   className="playlist-description-input"
                   placeholder="Добавьте описание..."
                 />
                 <div className="playlist-edit-buttons">
                   <button
-                    onClick={onEditSave}
+                    onClick={handleSave}
                     className="playlist-edit-save-btn"
                   >
                     <Check size={16} />
                     Сохранить
                   </button>
                   <button
-                    onClick={onEditCancel}
+                    onClick={handleEditCancel}
                     className="playlist-edit-cancel-btn"
                   >
                     <X size={16} />
@@ -113,8 +210,10 @@ const PlaylistEditHeader = ({
             ) : (
               <>
                 <h1 className="playlist-title">
-                  {currentPlaylist.title}
-                  <button onClick={onEditStart} className="edit-button">
+                  <span className="playlist-title-text">
+                    {currentPlaylist.title}
+                  </span>
+                  <button onClick={handleEditStart} className="edit-button">
                     <Edit2 size={16} />
                   </button>
                 </h1>
@@ -134,14 +233,13 @@ const PlaylistEditHeader = ({
             </div>
           </div>
         </div>
-        
-        {/* Теги внутри header-content */}
+
         <div className="playlist-tags-container">
           {tags.map((tag) => (
             <span key={tag} className="playlist-tag">
               {tag}
               <button
-                onClick={() => onTagRemove(tag)}
+                onClick={() => handleTagRemove(tag)}
                 className="playlist-tag-remove"
               >
                 <X size={12} />
@@ -153,15 +251,16 @@ const PlaylistEditHeader = ({
               <input
                 type="text"
                 value={newTag}
-                onChange={onTagInputChange}
+                onChange={handleTagInputChange}
+                onKeyPress={handleKeyPress}
                 placeholder="Добавить тег"
                 className="playlist-tag-input"
                 maxLength={tagMaxLength}
               />
               <button
-                onClick={onTagAdd}
+                onClick={handleTagAdd}
                 className="playlist-tag-add"
-                disabled={!newTag.trim()}
+                disabled={!newTag?.trim()}
               >
                 <Plus size={16} />
               </button>

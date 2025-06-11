@@ -1,7 +1,15 @@
 import { X } from "lucide-react";
+
+// Styles
 import "./ConfirmModal.css";
 
-export const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+export const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+}) => {
   if (!isOpen) return null;
 
   return (

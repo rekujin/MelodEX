@@ -1,0 +1,32 @@
+.playlist-saving-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  color: white;
+}
+
+.playlist-saving-overlay p {
+  margin-top: 16px;
+}
+
+.playlist-spinner {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #2563eb;
+  border-top: 2px solid transparent;
+  animation: playlist-spin 1s linear infinite;
+}
+@keyframes playlist-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

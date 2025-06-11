@@ -1,4 +1,4 @@
-/* Navbar.css - Стили для навигационной панели */
+/* Стили для навигационной панели */
 
 .navbar {
   background-color: var(--bg-white);
@@ -21,7 +21,6 @@
   gap: var(--spacing-md);
 }
 
-/* Стили для красивого лого MelodEX */
 .navbar-logo {
   text-decoration: none;
   font-size: var(--font-size-xl);
@@ -55,7 +54,6 @@
   background-clip: text;
 }
 
-/* Стили для строки поиска */
 .search-form {
   flex: 1;
   max-width: 400px;
@@ -183,7 +181,6 @@
   display: flex;
 }
 
-/* Стили для dropdown меню */
 .profile-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -235,26 +232,24 @@
   color: #e74c3c;
 }
 
-/* Добавляем бургер-меню для мобильных устройств */
 .menu-icon {
   display: none;
   cursor: pointer;
 }
 
-/* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
   .navbar-container {
     gap: var(--spacing-sm);
   }
 
   .search-form {
-    display: none; /* Скрываем поиск на мобильных */
+    display: none;
   }
 
   .menu-icon {
     display: block;
   }
-  
+
   .nav-menu {
     position: fixed;
     top: 60px;
@@ -269,18 +264,18 @@
     z-index: 90;
     align-items: stretch;
   }
-  
+
   .nav-menu.active {
     right: 0;
   }
-  
+
   .nav-item {
     width: 100%;
     padding: var(--spacing-md);
     text-align: center;
     border-bottom: 1px solid var(--bg-gray);
   }
-  
+
   .nav-item:last-child {
     border-bottom: none;
   }
@@ -319,3 +314,5 @@
     font-size: var(--font-size-lg);
   }
 }
+
+

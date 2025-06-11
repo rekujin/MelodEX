@@ -1,13 +1,39 @@
-import { Music, Calendar, User, ArrowLeft, ExternalLink, Edit2, Trash2 } from "lucide-react";
+// Icons
+import {
+  Music,
+  Calendar,
+  User,
+  ArrowLeft,
+  ExternalLink,
+  Edit2,
+  Trash2,
+} from "lucide-react";
+
+import { useNavigate } from "react-router-dom";
 import { formatDate } from "../../helper/formatters";
 import { playlistsApi } from "../../api/playlists";
 import { useAuth } from "../../hooks/useAuth";
 import { useState } from "react";
 import { ConfirmModal } from "../modals/ConfirmModal";
 
+import {
+  getPlatformColorClass,
+  getPlatformName,
+} from "../../helper/formatters";
+
+import "./PlaylistHeader.css";
+
 export const PlaylistHeader = ({ playlist, onBack }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+  const handleOpenOriginal = () => {
+    if (playlist.playlist_url) {
+      window.open(playlist.playlist_url, "_blank");
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -19,10 +45,10 @@ export const PlaylistHeader = ({ playlist, onBack }) => {
     }
   };
 
-  const handleOpenOriginal = () => {
-    if (playlist.playlist_url) {
-      window.open(playlist.playlist_url, "_blank");
-    }
+  const handleEdit = () => {
+    navigate("/playlists/edit", {
+      state: { playlistData: playlist },
+    });
   };
 
   return (
@@ -35,7 +61,11 @@ export const PlaylistHeader = ({ playlist, onBack }) => {
 
         <div className="playlist-header-content">
           <div className="playlist-avatar-wrapper">
-            <div className={`playlist-avatar ${playlist.avatar_url ? "has-image" : ""}`}>
+            <div
+              className={`playlist-avatar ${
+                playlist.avatar_url ? "has-image" : ""
+              }`}
+            >
               {playlist.avatar_url ? (
                 <img
                   src={playlist.avatar_url}
@@ -49,8 +79,27 @@ export const PlaylistHeader = ({ playlist, onBack }) => {
           </div>
 
           <div className="playlist-info">
+            <div className="playlist-platform-row">
+              <span
+                className={`playlist-platform-label ${getPlatformColorClass(
+                  playlist.platform
+                )}`}
+              >
+                {getPlatformName(playlist.platform)}
+              </span>
+            </div>
             <h1 className="playlist-title">{playlist.title}</h1>
-            <p className="playlist-desc">{playlist.description}</p>
+            <p className={`playlist-desc ${isDescExpanded ? "expanded" : ""}`}>
+              {playlist.description}
+            </p>
+            {playlist.description && playlist.description.length > 100 && (
+              <button
+                className="playlist-desc-button"
+                onClick={() => setIsDescExpanded(!isDescExpanded)}
+              >
+                {isDescExpanded ? "Скрыть" : "Показать"}
+              </button>
+            )}
 
             <div className="playlist-meta-row">
               <div className="playlist-meta">
@@ -63,7 +112,9 @@ export const PlaylistHeader = ({ playlist, onBack }) => {
               </div>
               <div className="playlist-meta">
                 <User size={16} />
-                <span>{playlist.author?.username || "Неизвестный пользователь"}</span>
+                <span>
+                  {playlist.author?.username || "Неизвестный пользователь"}
+                </span>
               </div>
             </div>
           </div>
@@ -88,7 +139,10 @@ export const PlaylistHeader = ({ playlist, onBack }) => {
             >
               <ExternalLink size={20} />
             </button>
-            <button className="playlist-actions-edit">
+            <button
+              className="playlist-actions-edit"
+              onClick={handleEdit}
+            >
               <Edit2 size={20} />
             </button>
             <button
