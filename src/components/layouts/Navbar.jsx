@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
 import "./Navbar.css";
-import CreateModal from "./CreateModal";
-import supabase from "../helper/supabaseClient";
+import CreateModal from "../modals/CreateModal";
+import supabase from "../../helper/supabaseClient";
 
 function Navbar() {
   const location = useLocation();
@@ -20,6 +20,45 @@ function Navbar() {
     setMenuActive(!menuActive);
   };
 
+  const searchPlaylists = async (query) => {
+    const cleanedQuery = query.trim().toLowerCase();
+    const queryWithoutHash = cleanedQuery.startsWith('#') ? cleanedQuery.slice(1) : cleanedQuery;
+
+    const { data: tagResults, error: tagError } = await supabase
+      .from("playlists")
+      .select(`
+        *,
+        author:profiles(id, username)
+      `)
+      .contains("tags", [`#${queryWithoutHash}`])
+      .eq("is_public", true);
+
+    if (tagError) {
+      console.error("Ошибка поиска по тегам:", tagError);
+      return [];
+    }
+
+    if (tagResults.length > 0) {
+      return tagResults;
+    }
+
+    const { data: textResults, error: textError } = await supabase
+      .from("playlists")
+      .select(`
+        *,
+        author:profiles(id, username)
+      `)
+      .or(`title.ilike.%${cleanedQuery}%,description.ilike.%${cleanedQuery}%`)
+      .eq("is_public", true);
+
+    if (textError) {
+      console.error("Ошибка поиска по тексту:", textError);
+      return [];
+    }
+
+    return textResults;
+  };
+
   const handleLogout = async () => {
     await signOut();
     setMenuActive(false);
@@ -27,11 +66,16 @@ function Navbar() {
     navigate("/");
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log("Поиск:", searchQuery);
-    }
+    if (!searchQuery.trim()) return;
+
+    const results = await searchPlaylists(searchQuery);
+
+    console.log("Результаты поиска:", results);
+
+    // Например, переходим на страницу с результатами:
+    navigate("/search", { state: { results, query: searchQuery } });
   };
 
   useEffect(() => {

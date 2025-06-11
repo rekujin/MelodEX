@@ -3,11 +3,12 @@ import { X, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import './CreateModal.css';
 
 const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
-  const [platform, setPlatform] = useState('yandex');
-  const [url, setUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [playlistData, setPlaylistData] = useState(null);
-  const [error, setError] = useState('');
+  const [formState, setFormState] = useState({
+    platform: 'yandex',
+    url: '',
+    playlistData: null,
+    error: ''
+  });
 
   const platforms = [
     { value: 'yandex', label: 'Яндекс.Музыка' },
@@ -16,47 +17,59 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
   ];
 
   const handleImport = async () => {
-    if (!url.trim()) {
-      setError('Введите ссылку на плейлист');
+    if (!formState.url.trim()) {
+      setFormState(prev => ({ ...prev, error: 'Введите ссылку на плейлист' }));
       return;
     }
 
-    setIsLoading(true);
-    setError('');
+    setFormState(prev => ({ ...prev, isLoading: true, error: '' }));
 
     try {
-      const response = await fetch(`http://localhost:5000/api/${platform}/resolve?url=${encodeURIComponent(url)}`);
+      const response = await fetch(`http://localhost:5000/api/${formState.platform}/resolve?url=${encodeURIComponent(formState.url)}`);
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error?.message || data.error || 'Ошибка при загрузке плейлиста');
       }
 
-      setPlaylistData({
-        ...data.result,
-        platform,
-        originalUrl: url
+      setFormState({
+        platform: 'yandex',
+        url: '',
+        playlistData: {
+          ...data.result,
+          platform: formState.platform,
+          originalUrl: formState.url // Make sure this is set
+        },
+        error: ''
       });
     } catch (err) {
       console.error('Import error:', err);
-      setError(err.message || 'Ошибка при загрузке плейлиста');
+      setFormState(prev => ({ ...prev, error: err.message || 'Ошибка при загрузке плейлиста' }));
     } finally {
-      setIsLoading(false);
+      setFormState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
   const handleCreate = () => {
-    if (playlistData) {
-      onImportSuccess(playlistData);
+    if (formState.playlistData) {
+      if (formState.playlistData.trackCount === 0) {
+        resetModal();
+        onClose();
+        return;
+      }
+      onImportSuccess(formState.playlistData);
+      resetModal();
       onClose();
     }
   };
 
   const resetModal = () => {
-    setUrl('');
-    setPlaylistData(null);
-    setError('');
-    setPlatform('yandex');
+    setFormState(prev => ({
+      platform: 'yandex',
+      url: '',
+      playlistData: null,
+      error: ''
+    }));
   };
 
   const handleClose = () => {
@@ -83,7 +96,7 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
         </div>
 
         <div>
-          {!playlistData ? (
+          {!formState.playlistData ? (
             // Форма импорта
             <form
               className="import-form"
@@ -98,8 +111,8 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
                   Платформа
                 </label>
                 <select
-                  value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
+                  value={formState.platform}
+                  onChange={(e) => setFormState(prev => ({ ...prev, platform: e.target.value }))}
                   className="input"
                 >
                   {platforms.map(p => (
@@ -117,28 +130,28 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
                 </label>
                 <input
                   type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  value={formState.url}
+                  onChange={(e) => setFormState(prev => ({ ...prev, url: e.target.value }))}
                   placeholder="Вставьте ссылку на плейлист"
                   className="input"
                 />
               </div>
 
               {/* Ошибка */}
-              {error && (
+              {formState.error && (
                 <div className="message error">
                   <AlertCircle />
-                  <span>{error}</span>
+                  <span>{formState.error}</span>
                 </div>
               )}
 
               {/* Кнопка импорта */}
               <button
                 type="submit"
-                disabled={isLoading || !url.trim()}
+                disabled={formState.isLoading || !formState.url.trim()}
                 className="import-btn"
               >
-                {isLoading ? (
+                {formState.isLoading ? (
                   <>
                     <div className="loader" />
                     <span className="import-btn-loading-text">Загрузка...</span>
@@ -161,21 +174,21 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
 
               <div className="playlist-preview">
                 <h3 className="playlist-preview-title">
-                  {playlistData.title}
+                  {formState.playlistData.title}
                 </h3>
                 <p className="playlist-preview-count">
-                  Треков: {playlistData.trackCount}
+                  Треков: {formState.playlistData.trackCount}
                 </p>
                 <div className="playlist-preview-platform-row">
                   <span className="playlist-preview-platform">
-                    {platforms.find(p => p.value === platform)?.label}
+                    {platforms.find(p => p.value === formState.platform)?.label}
                   </span>
                 </div>
               </div>
 
               <div className="playlist-result-actions">
                 <button
-                  onClick={() => setPlaylistData(null)}
+                  onClick={() => setFormState(prev => ({ ...prev, playlistData: null }))}
                   className="playlist-result-back"
                 >
                   Назад

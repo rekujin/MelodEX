@@ -1,121 +1,14 @@
-.home-container {
-  padding: 20px;
-}
-
-.nav-links {
-  margin-bottom: 30px;
-}
-
-.nav-links a {
-  margin-right: 15px;
-  text-decoration: none;
-  color: #666;
-}
-
-.nav-links a:hover {
-  color: #333;
-}
-
 .recent-playlists {
-  margin-top: 20px;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.playlists-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.playlist-card {
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.playlist-card:hover {
-  transform: translateY(-2px);
-}
-
-.playlist-cover {
-  aspect-ratio: 1;
-  background: #f0f0f0;
-  position: relative;
-}
-
-.playlist-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.playlist-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  background: #eee;
-}
-
-.playlist-icon {
-  width: 40px;
-  height: 40px;
-  color: #666;
-}
-
-.playlist-info {
-  padding: 12px;
-}
-
-.playlist-title {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-}
-
-.playlist-author {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.playlist-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #888;
-}
-
-.playlist-stats {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.playlist-stat-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.popular-playlists {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
 }

@@ -115,12 +115,6 @@
   }
 }
 
-@media (min-width: 1536px) {
-  .playlists-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
 @media (max-width: 1024px) {
   .playlists-cover {
     max-height: 160px;
@@ -192,6 +186,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  transition: color 0.2s;
 }
 
 .playlists-meta-author:hover {
@@ -229,4 +224,11 @@
 .empty-state-icon {
   color: #9ca3af;
   margin: 0 auto 1rem;
+}
+
+.playlist-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
 }

@@ -8,9 +8,9 @@ import {
   AlertCircle,
   Check,
 } from "lucide-react";
-import supabase from "../helper/supabaseClient";
+import supabase from "../../helper/supabaseClient";
 import "./Profile.css";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
 
 const ProfilePage = () => {
   const { user, loading: authLoading } = useAuth();

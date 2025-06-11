@@ -52,21 +52,13 @@
   z-index: 1;
 }
 
-.public-profile-avatar-fallback {
-  position: absolute;
-  top: 0;
-  left: 0;
+.public-profile-avatar-icon {
   width: 100%;
   height: 100%;
+  background: linear-gradient(135deg, #a78bfa, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(45deg, #1a1a1a, #333);
-}
-
-.public-profile-avatar-icon {
-  width: 64px;
-  height: 64px;
   color: white;
 }
 
@@ -158,11 +150,19 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, #1a1a1a, #333);
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
+}
+
+.public-playlist-placeholder-icon {
+  width: 3rem;
+  height: 3rem;
+  position: static;
+  transform: none;
+  color: white;
 }
 
 .public-playlist-info {
@@ -188,6 +188,26 @@
   gap: 0.25rem;
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+.public-playlist-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-playlist-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.public-playlist-meta-author {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
 }
 
 .public-playlist-stats {
@@ -225,15 +245,15 @@
   .public-profile-container {
     padding: 1rem 0rem;
   }
-  
+
   .public-playlists-section {
     padding: 1rem;
   }
-  
+
   .public-playlist-title {
     font-size: 0.8rem;
   }
-  
+
   .public-playlist-meta {
     font-size: 0.7rem;
   }

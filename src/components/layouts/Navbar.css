@@ -179,6 +179,10 @@
   font-size: var(--font-size-sm);
 }
 
+.profile-avatar:not(:has(.avatar-image)) .avatar-fallback {
+  display: flex;
+}
+
 /* Стили для dropdown меню */
 .profile-dropdown {
   position: absolute;

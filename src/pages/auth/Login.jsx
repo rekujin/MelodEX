@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import supabase from "../helper/supabaseClient";
+import supabase from "../../helper/supabaseClient";
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 const translateSupabaseError = (error) => {

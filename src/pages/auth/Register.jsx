@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./Register.css";
-import supabase from "../helper/supabaseClient";
+import supabase from "../../helper/supabaseClient";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
 const translateSupabaseError = (error) => {

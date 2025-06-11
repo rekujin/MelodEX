@@ -48,7 +48,7 @@
 .playlist-avatar {
   width: 192px;
   height: 192px;
-  background: linear-gradient(135deg, #a78bfa, #3b82f6);
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -94,6 +94,9 @@
 
 .playlist-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 192px; /* Высота равна высоте аватара плейлиста */
 }
 
 .playlist-platform-row {
@@ -224,6 +227,7 @@
   gap: 24px;
   font-size: 0.95rem;
   color: #6b7280;
+  margin-top: auto; /* Прижимаем к низу */
 }
 
 .playlist-meta {
@@ -241,8 +245,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 12px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .playlist-tag {
@@ -322,6 +325,59 @@
   text-align: right;
 }
 
+.playlist-actions-container {
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  gap: 13px;
+}
+
+.playlist-actions-link {
+  width: 48px;
+  height: 48px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playlist-actions-edit,
+.playlist-actions-remove {
+  width: 34px;
+  height: 34px;
+  background: white;
+  color: var(--text-dark);
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playlist-actions-link:hover,
+.playlist-actions-edit:hover,
+.playlist-actions-remove:hover {
+  transform: scale(1.1);
+}
+
+.playlist-actions-edit:hover {
+  background-color: white;
+}
+
+.playlist-actions-remove:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
 .playlist-tracks-container {
   /*max-width: 1100px;*/
   margin: 0 auto;
@@ -379,17 +435,6 @@
   transition: background 0.2s;
 }
 
-.playlist-track-artist svg,
-.playlist-track-album svg,
-.playlist-track-date svg,
-.playlist-track-duration svg {
-  min-width: 14px;
-  min-height: 14px;
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
 .playlist-track-cover {
   width: 48px;
   height: 48px;
@@ -441,10 +486,8 @@
   color: #6b7280;
   font-size: 0.97rem;
   min-width: 0;
-  /* Размеры иконок */
   svg {
-    width: 14px;
-    height: 14px;
+    flex-shrink: 0;
   }
 }
 .playlist-track-duration {
@@ -588,4 +631,3 @@
 .playlist-saving-overlay p {
   margin-top: 16px;
 }
-/* asdasdsada*/
