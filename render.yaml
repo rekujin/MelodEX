@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: melodix-api
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://melodix.onrender.com
+      - key: YANDEX_MUSIC_TOKEN
+        sync: false
+      - key: SOUNDCLOUD_CLIENT_ID
+        sync: false
+      - key: SOUNDCLOUD_CLIENT_SECRET
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false 

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "server": "node src/server/server.js",
     "dev:server": "nodemon src/server/server.js",
+    "start": "NODE_ENV=production node src/server/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
