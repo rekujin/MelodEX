@@ -33,7 +33,7 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/${
+        `${import.meta.env.VITE_API_URL}/${
           formState.platform
         }/resolve?url=${encodeURIComponent(formState.url)}`
       );
