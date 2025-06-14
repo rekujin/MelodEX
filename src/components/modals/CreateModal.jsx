@@ -52,6 +52,7 @@ const ImportModal = ({ isOpen, onClose, onImportSuccess = () => {} }) => {
           ...data.result,
           platform: formState.platform,
           originalUrl: formState.url,
+          avatar_url: data.result.avatar_url || data.result.cover || null,
         },
         error: "",
       });

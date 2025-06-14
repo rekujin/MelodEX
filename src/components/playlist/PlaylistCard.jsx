@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Music, User } from "lucide-react";
 import { playlistsApi } from "../../api/playlists";
@@ -11,6 +11,12 @@ export const PlaylistCard = ({ playlist, onLikeToggle }) => {
   const [likesCount, setLikesCount] = useState(playlist.likes_count || 0);
   const [isLiked, setIsLiked] = useState(playlist.is_liked || false);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
+  // ДОБАВЛЕНО: Синхронизация с пропсами
+  useEffect(() => {
+    setLikesCount(playlist.likes_count || 0);
+    setIsLiked(playlist.is_liked || false);
+  }, [playlist.likes_count, playlist.is_liked]);
 
   const handleLikeClick = async (e) => {
     e.stopPropagation();

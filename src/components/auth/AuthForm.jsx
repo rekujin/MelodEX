@@ -56,13 +56,26 @@ const AuthForm = ({
     }
   };
 
+  // Получаем ошибку только для первого поля с ошибкой
+  const getFieldErrorsText = () => {
+    const fieldKeys = Object.keys(fields);
+    for (const field of fieldKeys) {
+      if (fieldErrors[field]) {
+        return fieldErrors[field];
+      }
+    }
+    return null;
+  };
+
+  const fieldErrorsText = getFieldErrorsText();
+
   return (
     <div className="auth-container">
       <h2>{title}</h2>
-      {message?.text && (
-        <div className={`message ${message.type}`}>
-          {message.type === "success" ? <Check /> : <AlertCircle />}
-          <span>{message.text}</span>
+      {(message?.text || fieldErrorsText) && (
+        <div className={`message ${fieldErrorsText ? 'error' : message.type}`}>
+          {(fieldErrorsText ? 'error' : message.type) === "success" ? <Check /> : <AlertCircle />}
+          <span>{fieldErrorsText || message.text}</span>
         </div>
       )}
       <form onSubmit={handleSubmit} noValidate>
@@ -100,9 +113,6 @@ const AuthForm = ({
                 </button>
               )}
             </div>
-            {fieldErrors[field] && (
-              <div className="field-error">{fieldErrors[field]}</div>
-            )}
             {config.extraContent?.(formData[field])}
           </div>
         ))}
@@ -114,4 +124,4 @@ const AuthForm = ({
   );
 };
 
-export default AuthForm; 
+export default AuthForm;

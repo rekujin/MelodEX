@@ -53,4 +53,45 @@ export const translateSupabaseError = (error) => {
     return "Имя пользователя уже занято.";
 
   return error.message;
-}; 
+};
+
+export const VALIDATORS = {
+  username: (value) => {
+    if (!value) return "Имя пользователя обязательно";
+    if (VALIDATION.CYRILLIC_REGEX.test(value))
+      return "Кириллица не допускается";
+    if (value.length < VALIDATION.MIN_USERNAME_LENGTH)
+      return `Минимум ${VALIDATION.MIN_USERNAME_LENGTH} символа`;
+    if (!VALIDATION.USERNAME_REGEX.test(value))
+      return "Только латинские буквы, цифры и _";
+    return null;
+  },
+
+  email: (value) => {
+    if (!value) return "Email обязателен";
+    if (VALIDATION.CYRILLIC_REGEX.test(value))
+      return "Email не может содержать русские символы";
+    if (!VALIDATION.EMAIL_REGEX.test(value)) return "Некорректный email";
+    return null;
+  },
+
+  password: (value, isRequired = true) => {
+    if (!value && isRequired) return "Пароль обязателен";
+    if (!value && !isRequired) return null;
+    if (VALIDATION.CYRILLIC_REGEX.test(value))
+      return "Пароль не может содержать русские символы";
+    if (value.length < VALIDATION.MIN_PASSWORD_LENGTH)
+      return `Минимум ${VALIDATION.MIN_PASSWORD_LENGTH} символов`;
+    if (!VALIDATION.PASSWORD_REGEX.test(value))
+      return "Требуется заглавная буква, цифра и спецсимвол";
+    return null;
+  },
+
+  confirmPassword: (value, password) => {
+    if (password && !value) return "Подтвердите пароль";
+    if (VALIDATION.CYRILLIC_REGEX.test(value))
+      return "Пароль не может содержать русские символы";
+    if (value !== password) return "Пароли не совпадают";
+    return null;
+  }
+};

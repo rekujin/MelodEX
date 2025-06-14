@@ -1,8 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { useMobile } from "../hooks/useMobile"; 
-import { useSearch } from "../context/SearchContext";
+import { playlistsApi } from "../api/playlists";
 import supabase from "../helper/supabaseClient";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 
 import { ChevronDown, Search } from "lucide-react";
 
@@ -25,7 +26,6 @@ const SORT_OPTIONS = [
 
 function SearchResults() {
   const location = useLocation();
-  const { clearSearch } = useSearch();
   const { results = [], query = "" } = location.state || {};
 
   const [selectedPlatform, setSelectedPlatform] = useState("all");
@@ -33,13 +33,35 @@ function SearchResults() {
   const [isPlatformDropdownOpen, setIsPlatformDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState("");
-
-  const { searchQuery, setSearchQuery } = useSearch();
+  const [enrichedResults, setEnrichedResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const isMobile = useMobile(768);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (query) {
+      setLocalSearchQuery(query);
+    }
+  }, [query]);
+
+  useEffect(() => {
+    const enrichResults = async () => {
+      setIsLoading(true);
+      if (results.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const enriched = await playlistsApi.enrichPlaylistsWithLikes(results, user?.id);
+        setEnrichedResults(enriched);
+      } else {
+        setEnrichedResults([]);
+      }
+      setIsLoading(false);
+    };
+
+    enrichResults();
+  }, [results]);
+
   const filteredResults = useMemo(() => {
-    let filtered = [...results];
+    let filtered = [...enrichedResults];
 
     if (selectedPlatform !== "all") {
       filtered = filtered.filter(
@@ -58,13 +80,7 @@ function SearchResults() {
     });
 
     return filtered;
-  }, [results, selectedPlatform, sortBy]);
-
-  useEffect(() => {
-    return () => {
-      clearSearch();
-    };
-  }, [clearSearch]);
+  }, [enrichedResults, selectedPlatform, sortBy]);
 
   const handlePlatformSelect = (value) => {
     setSelectedPlatform(value);
@@ -80,12 +96,11 @@ function SearchResults() {
     e.preventDefault();
     if (!localSearchQuery.trim()) return;
 
-    setSearchQuery(localSearchQuery);
     const results = await searchPlaylists(localSearchQuery);
     navigate("/search", { state: { results, query: localSearchQuery } });
   };
 
-    const searchPlaylists = async (query) => {
+  const searchPlaylists = async (query) => {
     const cleanedQuery = query.trim().toLowerCase();
     
     const { data, error } = await supabase
@@ -112,10 +127,19 @@ function SearchResults() {
       return [];
     }
 
-    return data || [];
+    const { data: { user } } = await supabase.auth.getUser();
+    return await playlistsApi.enrichPlaylistsWithLikes(data || [], user?.id);
   };
 
-    return (
+  const handleLikeToggle = (updatedPlaylist) => {
+    setEnrichedResults(prevResults => 
+      prevResults.map(playlist => 
+        playlist.id === updatedPlaylist.id ? updatedPlaylist : playlist
+      )
+    );
+  };
+
+  return (
     <div className="search-results-page">
       <div className="search-header">
         {isMobile && (
@@ -212,7 +236,11 @@ function SearchResults() {
         </div>
       </div>
 
-      {filteredResults.length === 0 ? (
+      {isLoading ? (
+        <div className="loading-container">
+          <LoadingSpinner size="large" />
+        </div>
+      ) : filteredResults.length === 0 ? (
         <div className="no-results">
           <Search className="no-results-icon" size={64} />
           <h3>Ничего не найдено</h3>
@@ -224,7 +252,11 @@ function SearchResults() {
       ) : (
         <div className="playlists-grid">
           {filteredResults.map((playlist) => (
-            <PlaylistCard key={playlist.id} playlist={playlist} />
+            <PlaylistCard 
+              key={playlist.id} 
+              playlist={playlist} 
+              onLikeToggle={handleLikeToggle}
+            />
           ))}
         </div>
       )}

@@ -12,6 +12,25 @@ function Home() {
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [loadingPopular, setLoadingPopular] = useState(true);
 
+  const handleLikeToggle = (updatedPlaylist) => {
+    // Обновляем оба списка одновременно
+    setRecentPlaylists(prevPlaylists =>
+      prevPlaylists.map(playlist =>
+        playlist.id === updatedPlaylist.id
+          ? updatedPlaylist
+          : playlist
+      )
+    );
+
+    setPopularPlaylists(prevPlaylists =>
+      prevPlaylists.map(playlist =>
+        playlist.id === updatedPlaylist.id
+          ? updatedPlaylist
+          : playlist
+      )
+    );
+  };
+
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
@@ -46,6 +65,7 @@ function Home() {
               <PlaylistCard 
                 key={`recent-${playlist.id}`} 
                 playlist={{...playlist, author: { username: playlist.profiles?.username }}} 
+                onLikeToggle={handleLikeToggle}
               />
             ))}
           </div>
@@ -63,6 +83,7 @@ function Home() {
               <PlaylistCard 
                 key={`popular-${playlist.id}`} 
                 playlist={{...playlist, author: { username: playlist.profiles?.username }}} 
+                onLikeToggle={handleLikeToggle}
               />
             ))}
           </div>

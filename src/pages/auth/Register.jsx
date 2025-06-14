@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "./Register.css";
 import supabase from "../../helper/supabaseClient";
 import AuthForm from "../../components/auth/AuthForm";
-import { VALIDATION, checkPasswordStrength, translateSupabaseError } from "../../utils/validation";
+import {
+  VALIDATION,
+  checkPasswordStrength,
+  translateSupabaseError,
+} from "../../utils/validation";
 
 const FIELDS = {
   email: {
@@ -37,23 +41,26 @@ const FIELDS = {
     placeholder: "Не менее 8 символов",
     validate: (val) => {
       if (!val) return "Введите пароль";
-      if (VALIDATION.CYRILLIC_REGEX.test(val))
-        return "Пароль не может содержать русские символы";
+      if (val.length < VALIDATION.MIN_PASSWORD_LENGTH)
+        return `Минимум ${VALIDATION.MIN_PASSWORD_LENGTH} символов`;
       if (!VALIDATION.PASSWORD_REGEX.test(val))
-        return "Пароль должен содержать минимум 8 символов, включая заглавные и строчные буквы, цифры и специальные символы";
+        return "Требуется заглавная буква, цифра и спецсимвол";
       return null;
     },
-    extraContent: (value) => value && (
-      <div className="password-strength">
-        <div className={`strength-bar strength-${checkPasswordStrength(value)}`} />
-        <span>
-          Сложность пароля:{" "}
-          {["Слабый", "Средний", "Хороший", "Сильный"][
-            checkPasswordStrength(value) - 1
-          ] || "Очень слабый"}
-        </span>
-      </div>
-    ),
+    extraContent: (value) =>
+      value && (
+        <div className="password-strength">
+          <div
+            className={`strength-bar strength-${checkPasswordStrength(value)}`}
+          />
+          <span>
+            Сложность пароля:{" "}
+            {["Слабый", "Средний", "Хороший", "Сильный"][
+              checkPasswordStrength(value) - 1
+            ] || "Очень слабый"}
+          </span>
+        </div>
+      ),
   },
 };
 

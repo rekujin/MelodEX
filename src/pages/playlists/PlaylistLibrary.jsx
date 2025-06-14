@@ -37,10 +37,8 @@ const PlaylistLibrary = () => {
     const updateList = (list) =>
       list.map((p) => (p.id === updatedPlaylist.id ? updatedPlaylist : p));
 
-    // Обновляем созданные плейлисты
     setCreatedPlaylists((prev) => updateList(prev));
 
-    // Обновляем список лайкнутых плейлистов
     setLikedPlaylists((prev) => {
       if (updatedPlaylist.is_liked) {
         const exists = prev.some((p) => p.id === updatedPlaylist.id);

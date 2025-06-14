@@ -410,49 +410,27 @@ export const playlistsApi = {
     if (error) throw error;
   },
 
-  async togglePlaylistLike(id) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+ async togglePlaylistLike(id) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
 
-    const { data: existingLike } = await supabase
-      .from("playlist_likes")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("playlist_id", id)
-      .maybeSingle();
+  // Используем RPC функцию для атомарной операции
+  const { data, error } = await supabase.rpc('toggle_playlist_like_atomic', {
+    p_playlist_id: id
+  });
 
-    if (existingLike) {
-      await supabase
-        .from("playlist_likes")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("playlist_id", id);
-    } else {
-      await supabase
-        .from("playlist_likes")
-        .insert({ user_id: user.id, playlist_id: id });
-    }
+  if (error) {
+    console.error('Toggle like error:', error);
+    throw error;
+  }
 
-    const { data: playlistData } = await supabase
-      .from("playlists")
-      .select("likes_count")
-      .eq("id", id)
-      .single();
-
-    const { data: newLikeStatus } = await supabase
-      .from("playlist_likes")
-      .select()
-      .eq("user_id", user.id)
-      .eq("playlist_id", id)
-      .maybeSingle();
-
-    return {
-      likes_count: playlistData.likes_count,
-      is_liked: !!newLikeStatus,
-    };
-  },
+  return {
+    likes_count: data[0].likes_count,
+    is_liked: data[0].is_liked,
+  };
+},
 
   async enrichPlaylistsWithLikes(playlists, userId) {
     if (!userId || !playlists.length) return playlists;

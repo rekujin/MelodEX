@@ -11,7 +11,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useFormValidation } from "../../hooks/useFormValidation";
-import { VALIDATION } from "../../utils/validation";
+import { VALIDATORS } from "../../utils/validation";
 import supabase from "../../helper/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -28,36 +28,11 @@ const ProfilePage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validationRules = {
-    username: (value) => {
-      if (!value) return "Имя пользователя обязательно";
-      if (value.length < VALIDATION.MIN_USERNAME_LENGTH)
-        return `Минимум ${VALIDATION.MIN_USERNAME_LENGTH} символа`;
-      if (!VALIDATION.USERNAME_REGEX.test(value))
-        return "Только латинские буквы, цифры и _";
-      if (VALIDATION.CYRILLIC_REGEX.test(value))
-        return "Кириллица не допускается";
-      return null;
-    },
-    email: (value) => {
-      if (!value) return "Email обязателен";
-      if (!VALIDATION.EMAIL_REGEX.test(value)) return "Некорректный email";
-      return null;
-    },
-    newPassword: (value) => {
-      if (!value) return null; // пароль не обязателен при обновлении
-      if (value.length < VALIDATION.MIN_PASSWORD_LENGTH)
-        return `Минимум ${VALIDATION.MIN_PASSWORD_LENGTH} символов`;
-      if (!VALIDATION.PASSWORD_REGEX.test(value))
-        return "Требуется заглавная буква, цифра и спецсимвол";
-      return null;
-    },
-    confirmPassword: (value) => {
-      if (formValidation.values.newPassword && !value)
-        return "Подтвердите пароль";
-      if (value !== formValidation.values.newPassword)
-        return "Пароли не совпадают";
-      return null;
-    },
+    username: VALIDATORS.username,
+    email: VALIDATORS.email,
+    newPassword: (value) => VALIDATORS.password(value, false),
+    confirmPassword: (value) =>
+      VALIDATORS.confirmPassword(value, formValidation.values.newPassword),
   };
 
   const formValidation = useFormValidation(
@@ -106,6 +81,26 @@ const ProfilePage = () => {
 
   const handleInputChange = (field, value) => {
     formValidation.handleChange(field, value);
+
+    const fieldsOrder = ["username", "email", "newPassword", "confirmPassword"];
+    const currentValues = {
+      ...formValidation.values,
+      [field]: value,
+    };
+
+    const firstError = fieldsOrder
+      .map((fieldName) => {
+        if (fieldName === "newPassword" && !currentValues.newPassword) return null;
+        if (fieldName === "confirmPassword" && !currentValues.newPassword) return null;
+        return validationRules[fieldName](currentValues[fieldName]);
+      })
+      .find((error) => error !== null);
+
+    if (firstError) {
+      setMessage({ type: "error", text: firstError });
+    } else {
+      setMessage({ type: "", text: "" });
+    }
   };
 
   const handleAvatarUpload = async (event) => {
@@ -177,9 +172,11 @@ const ProfilePage = () => {
   const handleSaveProfile = async () => {
     try {
       if (!formValidation.validateForm()) {
+        // Найдем первую ошибку для отображения
+        const firstError = Object.values(formValidation.errors).find((error) => error);
         setMessage({
           type: "error",
-          text: "Пожалуйста, исправьте ошибки в форме",
+          text: firstError || "Пожалуйста, исправьте ошибки в форме",
         });
         return;
       }
@@ -338,9 +335,6 @@ const ProfilePage = () => {
                 />
                 <label htmlFor="username">Имя пользователя</label>
               </div>
-              {formValidation.errors.username && (
-                <div className="error-message">{formValidation.errors.username}</div>
-              )}
             </div>
 
             <div className="form-group">
@@ -356,9 +350,6 @@ const ProfilePage = () => {
                 />
                 <label htmlFor="email">Email</label>
               </div>
-              {formValidation.errors.email && (
-                <div className="error-message">{formValidation.errors.email}</div>
-              )}
             </div>
 
             <div className="form-group">
@@ -367,9 +358,7 @@ const ProfilePage = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={formValidation.values.newPassword}
-                  onChange={(e) =>
-                    handleInputChange("newPassword", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("newPassword", e.target.value)}
                   className={formValidation.errors.newPassword ? "error" : ""}
                   id="newPassword"
                 />
@@ -386,9 +375,6 @@ const ProfilePage = () => {
                   )}
                 </button>
               </div>
-              {formValidation.errors.newPassword && (
-                <div className="error-message">{formValidation.errors.newPassword}</div>
-              )}
             </div>
 
             {formValidation.values.newPassword && (
@@ -398,9 +384,7 @@ const ProfilePage = () => {
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={formValidation.values.confirmPassword}
-                    onChange={(e) =>
-                      handleInputChange("confirmPassword", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     className={formValidation.errors.confirmPassword ? "error" : ""}
                     id="confirmPassword"
                     required
@@ -418,9 +402,6 @@ const ProfilePage = () => {
                     )}
                   </button>
                 </div>
-                {formValidation.errors.confirmPassword && (
-                  <div className="error-message">{formValidation.errors.confirmPassword}</div>
-                )}
               </div>
             )}
 
