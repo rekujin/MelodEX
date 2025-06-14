@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import swaggerUi from 'swagger-ui-express';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 import { getSoundCloudToken } from './soundcloud/auth.js';
 import { getSpotifyToken } from './spotify/auth.js';
@@ -50,6 +51,15 @@ const formatImageUrl = (url, service) => {
   }
 };
 
+const getProxyAgent = () => {
+  const proxyUrl = process.env.HTTP_PROXY;
+  if (proxyUrl) {
+    console.log('Using proxy:', proxyUrl.replace(/\/\/.*?@/, '//*:*@')); // маскируем креды в логах
+    return new HttpsProxyAgent(proxyUrl);
+  }
+  return null;
+};
+
 /**
  * @swagger
  * /api/yandex/resolve:
@@ -95,16 +105,20 @@ app.get('/api/yandex/resolve', async (req, res) => {
     const token = process.env.YANDEX_MUSIC_TOKEN;
     if (!token) return res.status(500).json({ error: 'Server configuration error' });
 
+    const proxyAgent = getProxyAgent();
+    const fetchOptions = {
+      headers: {
+        'Authorization': `OAuth ${token}`,
+        'Accept-Language': 'ru',
+        'Accept': 'application/json'
+      },
+      timeout: 5000,
+      agent: proxyAgent
+    };
+
     const response = await fetch(
       `https://api.music.yandex.net/users/${username}/playlists/${kind}`,
-      {
-        headers: {
-          'Authorization': `OAuth ${token}`,
-          'Accept-Language': 'ru',
-          'Accept': 'application/json'
-        },
-        timeout: 5000
-      }
+      fetchOptions
     );
 
     if (!response.ok) {
