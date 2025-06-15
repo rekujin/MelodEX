@@ -91,7 +91,6 @@
 .playlist-platform-row {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -159,7 +158,7 @@
   white-space: pre-wrap;
   text-overflow: ellipsis;
   word-wrap: break-word;
-  hyphens: auto;  
+  hyphens: auto;
 }
 
 .playlist-desc.expanded {
@@ -283,15 +282,15 @@
   .playlist-header-inner {
     padding: 24px;
   }
-  
+
   .playlist-tracks-container {
     padding: 32px 0;
   }
-  
+
   .playlist-tracks-header {
     padding: 20px 32px;
   }
-  
+
   .playlist-table th,
   .playlist-table td {
     padding: 20px 32px;
@@ -303,29 +302,29 @@
   .playlist-header-inner {
     padding: 16px;
   }
-  
+
   .playlist-avatar {
     width: 160px;
     height: 160px;
   }
-  
+
   .playlist-avatar-icon {
     width: 56px;
     height: 56px;
   }
-  
+
   .playlist-info {
     min-height: 160px;
   }
-  
+
   .playlist-title {
     font-size: 1.75rem;
   }
-  
+
   .playlist-meta-row {
     gap: 16px;
   }
-  
+
   .playlist-table th,
   .playlist-table td {
     padding: 14px 20px;
@@ -337,81 +336,81 @@
   .playlist-header-inner {
     padding: 12px;
   }
-  
+
   .playlist-header-content {
     gap: 16px;
   }
-  
+
   .playlist-avatar {
     width: 120px;
     height: 120px;
   }
-  
+
   .playlist-avatar-icon {
     width: 40px;
     height: 40px;
   }
-  
+
   .playlist-info {
     min-height: 120px;
   }
-  
+
   .playlist-title {
     font-size: 1.5rem;
     margin-bottom: 8px;
   }
-  
+
   .playlist-meta-row {
     gap: 12px;
     flex-wrap: wrap;
   }
-  
+
   .playlist-meta {
     max-width: 150px;
   }
-  
+
   .playlist-actions-container {
     gap: 10px;
     margin-top: 12px;
   }
-  
+
   .playlist-actions-link {
     width: 40px;
     height: 40px;
     padding: 10px;
   }
-  
+
   .playlist-actions-edit,
   .playlist-actions-remove {
     width: 30px;
     height: 30px;
     padding: 6px;
   }
-  
+
   .playlist-tracks-container {
     padding: 16px 0;
   }
-  
+
   .playlist-tracks-header {
     padding: 12px 16px;
   }
-  
+
   .playlist-tracks-title {
     font-size: 1rem;
   }
-  
+
   .playlist-table th,
   .playlist-table td {
     padding: 12px 16px;
     font-size: 0.9rem;
     max-width: 120px;
   }
-  
+
   .playlist-track-cover {
     width: 40px;
     height: 40px;
   }
-  
+
   .playlist-track-artist span,
   .playlist-track-album span,
   .playlist-track-date span,
@@ -425,35 +424,39 @@
   .playlist-header-inner {
     padding: 8px;
   }
-  
+
+  .playlist-platform-row {
+    justify-content: center;
+  }
+
   .playlist-back-btn {
     margin-bottom: 12px;
     font-size: 0.9rem;
   }
-  
+
   .playlist-header-content {
     flex-direction: column;
     gap: 16px;
     align-items: center;
     text-align: center;
   }
-  
+
   .playlist-avatar {
     width: 100px;
     height: 100px;
     margin: 0 auto;
   }
-  
+
   .playlist-avatar-icon {
     width: 32px;
     height: 32px;
   }
-  
+
   .playlist-info {
     min-height: auto;
     width: 100%;
   }
-  
+
   .playlist-title {
     font-size: 1.25rem;
     margin-bottom: 8px;
@@ -464,65 +467,65 @@
   .playlist-actions {
     margin-bottom: 50px;
   }
-  
+
   .playlist-desc {
     text-align: center;
     margin-bottom: 12px;
   }
-  
+
   .playlist-meta-row {
     flex-direction: column;
     gap: 8px;
     align-items: center;
     margin-top: 12px;
   }
-  
+
   .playlist-meta {
     max-width: 100%;
     justify-content: center;
   }
-  
+
   .playlist-tags-container {
     justify-content: center;
     margin-top: 12px;
   }
-  
+
   .playlist-tag {
     font-size: 12px;
     padding: 4px 8px;
   }
-  
+
   .playlist-actions-container {
     justify-content: center;
     gap: 8px;
     margin-top: 12px;
   }
-  
+
   .playlist-actions-link {
     width: 36px;
     height: 36px;
     padding: 8px;
   }
-  
+
   .playlist-actions-edit,
   .playlist-actions-remove {
     width: 28px;
     height: 28px;
     padding: 4px;
   }
-  
+
   .playlist-tracks-container {
     padding: 12px 0;
   }
-  
+
   .playlist-tracks-header {
     padding: 10px 12px;
   }
-  
+
   .playlist-tracks-title {
     font-size: 0.95rem;
   }
-  
+
   /* Скрываем некоторые колонки на мобильных */
   .playlist-table th:nth-child(5),
   .playlist-table td:nth-child(5),
@@ -530,40 +533,40 @@
   .playlist-table td:nth-child(6) {
     display: none;
   }
-  
+
   .playlist-table th,
   .playlist-table td {
     padding: 10px 8px;
     font-size: 0.85rem;
     max-width: 80px;
   }
-  
+
   .playlist-table th:first-child,
   .playlist-table td:first-child {
     width: 30px;
     max-width: 30px;
     padding: 10px 4px;
   }
-  
+
   .playlist-table th:nth-child(2),
   .playlist-table td:nth-child(2) {
     width: 50px;
     max-width: 50px;
     padding: 10px 4px;
   }
-  
+
   .playlist-track-cover {
     width: 32px;
     height: 32px;
   }
-  
+
   .playlist-track-artist span,
   .playlist-track-album span,
   .playlist-track-date span,
   .playlist-track-duration span {
     max-width: 60px;
   }
-  
+
   .playlist-track-artist svg,
   .playlist-track-album svg,
   .playlist-track-date svg,
@@ -578,32 +581,32 @@
   .playlist-header-inner {
     padding: 6px;
   }
-  
+
   .playlist-avatar {
     width: 80px;
     height: 80px;
   }
-  
+
   .playlist-avatar-icon {
     width: 24px;
     height: 24px;
   }
-  
+
   .playlist-title {
     font-size: 1.1rem;
   }
-  
+
   .playlist-table th,
   .playlist-table td {
     padding: 8px 4px;
     font-size: 0.8rem;
   }
-  
+
   .playlist-track-cover {
     width: 28px;
     height: 28px;
   }
-  
+
   .playlist-track-artist span,
   .playlist-track-album span,
   .playlist-track-date span,
