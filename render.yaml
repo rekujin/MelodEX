@@ -1,5 +1,19 @@
 services:
   - type: web
+    name: melodix-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: NODE_ENV
+        value: production
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
     name: melodix-api
     env: node
     buildCommand: cd src/server && npm install && npm run build

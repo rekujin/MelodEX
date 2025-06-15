@@ -90,7 +90,7 @@ app.get('/api/yandex/resolve', async (req, res) => {
     try {
       parsedUrl = new URL(url);
     } catch (e) {
-      return res.status(400).json({ error: 'Неверный формат ссылки' });
+      return res.status(400).json({ error: 'Неверный формат ссылки на плейлист Яндекс.Музыки' });
     }
 
     const pathMatch = parsedUrl.pathname.match(/\/users\/([^\/]+)\/playlists\/(\d+)/);
