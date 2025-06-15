@@ -27,6 +27,7 @@ const PlaylistEditHeader = ({
   onTagsChange,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [editedData, setEditedData] = useState({
     title: currentPlaylist.title || "",
     description: currentPlaylist.description || "",
@@ -217,7 +218,17 @@ const PlaylistEditHeader = ({
                     <Edit2 size={16} />
                   </button>
                 </h1>
-                <p className="playlist-desc">{currentPlaylist.description}</p>
+                <p className={`playlist-desc ${isDescriptionExpanded ? "expanded" : ""}`}>
+                  {currentPlaylist.description}
+                </p>
+                {currentPlaylist.description?.length > 100 && (
+                  <button 
+                    className="playlist-desc-button"
+                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                  >
+                    {isDescriptionExpanded ? "Свернуть" : "Показать"}
+                  </button>
+                )}
               </>
             )}
 

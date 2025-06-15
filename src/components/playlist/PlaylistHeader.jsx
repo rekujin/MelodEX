@@ -130,29 +130,32 @@ export const PlaylistHeader = ({ playlist, onBack }) => {
           </div>
         )}
 
-        {user && user.id === playlist.author_id && (
-          <div className="playlist-actions-container">
-            <button
-              className="playlist-actions-link"
-              onClick={handleOpenOriginal}
-              disabled={!playlist.playlist_url}
-            >
-              <ExternalLink size={20} />
-            </button>
-            <button
-              className="playlist-actions-edit"
-              onClick={handleEdit}
-            >
-              <Edit2 size={20} />
-            </button>
-            <button
-              className="playlist-actions-remove"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <Trash2 size={20} />
-            </button>
-          </div>
-        )}
+        <div className="playlist-actions-container">
+          <button
+            className="playlist-actions-link"
+            onClick={handleOpenOriginal}
+            disabled={!playlist.playlist_url}
+          >
+            <ExternalLink size={20} />
+          </button>
+          
+          {user && user.id === playlist.author_id && (
+            <>
+              <button
+                className="playlist-actions-edit"
+                onClick={handleEdit}
+              >
+                <Edit2 size={20} />
+              </button>
+              <button
+                className="playlist-actions-remove"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 size={20} />
+              </button>
+            </>
+          )}
+        </div>
 
         <ConfirmModal
           isOpen={showDeleteConfirm}
