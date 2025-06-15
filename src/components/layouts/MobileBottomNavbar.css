@@ -152,12 +152,6 @@
   }
 }
 
-/* Темная тема */
-@media (prefers-color-scheme: dark) {
-  .mobile-bottom-navbar {
-  
-  }
-}
 
 /* Скрыть на десктопе */
 @media (min-width: 769px) {

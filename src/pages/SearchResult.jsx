@@ -157,6 +157,7 @@ function SearchResults() {
       )
     );
   }, []);
+  
 
   useEffect(() => {
     const handleClickOutside = () => {
