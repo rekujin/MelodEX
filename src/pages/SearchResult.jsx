@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useMobile } from "../hooks/useMobile"; 
 import { playlistsApi } from "../api/playlists";
 import supabase from "../helper/supabaseClient";
@@ -26,82 +26,32 @@ const SORT_OPTIONS = [
 
 function SearchResults() {
   const location = useLocation();
-  const { results = [], query = "" } = location.state || {};
+  const navigate = useNavigate();
+  const isMobile = useMobile(768);
+  
+  const [initialData, setInitialData] = useState(() => {
+    const { results = [], query = "" } = location.state || {};
+    return { results, query };
+  });
 
   const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [isPlatformDropdownOpen, setIsPlatformDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
-  const [localSearchQuery, setLocalSearchQuery] = useState("");
+  const [localSearchQuery, setLocalSearchQuery] = useState(initialData.query);
   const [enrichedResults, setEnrichedResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const isMobile = useMobile(768);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (query) {
-      setLocalSearchQuery(query);
-    }
-  }, [query]);
+    const { results = [], query = "" } = location.state || {};
+    setInitialData({ results, query });
+    setLocalSearchQuery(query);
+  }, [location.state]);
 
-  useEffect(() => {
-    const enrichResults = async () => {
-      setIsLoading(true);
-      if (results.length > 0) {
-        const { data: { user } } = await supabase.auth.getUser();
-        const enriched = await playlistsApi.enrichPlaylistsWithLikes(results, user?.id);
-        setEnrichedResults(enriched);
-      } else {
-        setEnrichedResults([]);
-      }
-      setIsLoading(false);
-    };
-
-    enrichResults();
-  }, [results]);
-
-  const filteredResults = useMemo(() => {
-    let filtered = [...enrichedResults];
-
-    if (selectedPlatform !== "all") {
-      filtered = filtered.filter(
-        (playlist) => playlist.platform === selectedPlatform
-      );
-    }
-
-    filtered.sort((a, b) => {
-      if (sortBy === "date") {
-        return new Date(b.created_at) - new Date(a.created_at);
-      }
-      if (sortBy === "popularity") {
-        return (b.likes_count || 0) - (a.likes_count || 0);
-      }
-      return 0;
-    });
-
-    return filtered;
-  }, [enrichedResults, selectedPlatform, sortBy]);
-
-  const handlePlatformSelect = (value) => {
-    setSelectedPlatform(value);
-    setIsPlatformDropdownOpen(false);
-  };
-
-  const handleSortSelect = (value) => {
-    setSortBy(value);
-    setIsSortDropdownOpen(false);
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!localSearchQuery.trim()) return;
-
-    const results = await searchPlaylists(localSearchQuery);
-    navigate("/search", { state: { results, query: localSearchQuery } });
-  };
-
-  const searchPlaylists = async (query) => {
-    const cleanedQuery = query.trim().toLowerCase();
+  const searchPlaylists = useCallback(async (searchQuery) => {
+    const cleanedQuery = searchQuery.trim().toLowerCase();
+    
+    if (!cleanedQuery) return [];
     
     const { data, error } = await supabase
       .from("playlists")
@@ -129,15 +79,96 @@ function SearchResults() {
 
     const { data: { user } } = await supabase.auth.getUser();
     return await playlistsApi.enrichPlaylistsWithLikes(data || [], user?.id);
-  };
+  }, []);
 
-  const handleLikeToggle = (updatedPlaylist) => {
+  useEffect(() => {
+    const enrichResults = async () => {
+      setIsLoading(true);
+      try {
+        if (initialData.results.length > 0) {
+          const { data: { user } } = await supabase.auth.getUser();
+          const enriched = await playlistsApi.enrichPlaylistsWithLikes(initialData.results, user?.id);
+          setEnrichedResults(enriched);
+        } else {
+          setEnrichedResults([]);
+        }
+      } catch (error) {
+        console.error("Error enriching results:", error);
+        setEnrichedResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    enrichResults();
+  }, [initialData.results]);
+
+  const filteredResults = useMemo(() => {
+    let filtered = [...enrichedResults];
+
+    if (selectedPlatform !== "all") {
+      filtered = filtered.filter(
+        (playlist) => playlist.platform === selectedPlatform
+      );
+    }
+
+    filtered.sort((a, b) => {
+      if (sortBy === "date") {
+        return new Date(b.created_at) - new Date(a.created_at);
+      }
+      if (sortBy === "popularity") {
+        return (b.likes_count || 0) - (a.likes_count || 0);
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [enrichedResults, selectedPlatform, sortBy]);
+
+  const handlePlatformSelect = useCallback((value) => {
+    setSelectedPlatform(value);
+    setIsPlatformDropdownOpen(false);
+  }, []);
+
+  const handleSortSelect = useCallback((value) => {
+    setSortBy(value);
+    setIsSortDropdownOpen(false);
+  }, []);
+
+  const handleSearch = useCallback(async (e) => {
+    e.preventDefault();
+    if (!localSearchQuery.trim()) return;
+
+    try {
+      const searchResults = await searchPlaylists(localSearchQuery);
+      navigate("/search", { 
+        state: { results: searchResults, query: localSearchQuery },
+        replace: true
+      });
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  }, [localSearchQuery, searchPlaylists, navigate]);
+
+  const handleLikeToggle = useCallback((updatedPlaylist) => {
     setEnrichedResults(prevResults => 
       prevResults.map(playlist => 
         playlist.id === updatedPlaylist.id ? updatedPlaylist : playlist
       )
     );
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsPlatformDropdownOpen(false);
+      setIsSortDropdownOpen(false);
+    };
+
+    if (isPlatformDropdownOpen || isSortDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isPlatformDropdownOpen, isSortDropdownOpen]);
 
   return (
     <div className="search-results-page">
@@ -176,7 +207,7 @@ function SearchResults() {
             </div>
           </form>
         )}
-        <h2>Результаты поиска: "{query}"</h2>
+        <h2>Результаты поиска: "{initialData.query}"</h2>
 
         <div className="search-filters">
           <div className="filter-group">
@@ -184,7 +215,10 @@ function SearchResults() {
             <div className="custom-select">
               <button 
                 className="platform-select-button"
-                onClick={() => setIsPlatformDropdownOpen(!isPlatformDropdownOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPlatformDropdownOpen(!isPlatformDropdownOpen);
+                }}
               >
                 {PLATFORM_OPTIONS.find(opt => opt.value === selectedPlatform)?.label}
                 <ChevronDown size={16} />
@@ -196,7 +230,10 @@ function SearchResults() {
                     <button
                       key={option.value}
                       className={`platform-option ${selectedPlatform === option.value ? 'selected' : ''}`}
-                      onClick={() => handlePlatformSelect(option.value)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlatformSelect(option.value);
+                      }}
                     >
                       {option.icon && <img src={option.icon} alt="" className="platform-icon" />}
                       <span>{option.label}</span>
@@ -212,7 +249,10 @@ function SearchResults() {
             <div className="custom-select">
               <button 
                 className="platform-select-button"
-                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSortDropdownOpen(!isSortDropdownOpen);
+                }}
               >
                 {SORT_OPTIONS.find(opt => opt.value === sortBy)?.label}
                 <ChevronDown size={16} />
@@ -224,7 +264,10 @@ function SearchResults() {
                     <button
                       key={option.value}
                       className={`platform-option ${sortBy === option.value ? 'selected' : ''}`}
-                      onClick={() => handleSortSelect(option.value)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSortSelect(option.value);
+                      }}
                     >
                       <span>{option.label}</span>
                     </button>
@@ -245,7 +288,7 @@ function SearchResults() {
           <Search className="no-results-icon" size={64} />
           <h3>Ничего не найдено</h3>
           <p>
-            К сожалению, по вашему запросу "{query}" результатов не найдено. 
+            К сожалению, по вашему запросу "{initialData.query}" результатов не найдено. 
             Попробуйте изменить параметры поиска или использовать другие ключевые слова.
           </p>
         </div>
