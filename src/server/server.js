@@ -54,8 +54,7 @@ const formatImageUrl = (url, service) => {
 const getProxyAgent = () => {
   const proxyUrl = process.env.HTTP_PROXY;
   if (proxyUrl) {
-    console.log('Using proxy:', proxyUrl.replace(/\/\/.*?@/, '//*:*@')); // маскируем креды в логах
-    return new HttpsProxyAgent(proxyUrl);
+    console.log('Using proxy:', proxyUrl.replace(/\/\/.*?@/, '//*:*@'));
   }
   return null;
 };
@@ -85,25 +84,25 @@ const getProxyAgent = () => {
 app.get('/api/yandex/resolve', async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ error: 'Missing ?url parameter' });
+    if (!url) return res.status(400).json({ error: 'Отсутствует параметр ?url' });
 
     let parsedUrl;
     try {
       parsedUrl = new URL(url);
     } catch (e) {
-      return res.status(400).json({ error: 'Invalid URL format' });
+      return res.status(400).json({ error: 'Неверный формат ссылки' });
     }
 
     const pathMatch = parsedUrl.pathname.match(/\/users\/([^\/]+)\/playlists\/(\d+)/);
     if (!pathMatch) {
-      return res.status(400).json({ error: 'URL does not match Yandex.Music playlist pattern' });
+      return res.status(400).json({ error: 'Ссылка не соответствует Яндекс.Музыке' });
     }
 
     const username = pathMatch[1];
     const kind = pathMatch[2];
     
     const token = process.env.YANDEX_MUSIC_TOKEN;
-    if (!token) return res.status(500).json({ error: 'Server configuration error' });
+    if (!token) return res.status(500).json({ error: 'Ошибка конфигурации сервера' });
 
     const proxyAgent = getProxyAgent();
     const fetchOptions = {
@@ -191,7 +190,7 @@ app.get('/api/yandex/resolve', async (req, res) => {
 app.get('/api/soundcloud/resolve', async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ error: 'Missing ?url parameter' });
+    if (!url) return res.status(400).json({ error: 'Отсутствует параметр ?url' });
 
     const access_token = await getSoundCloudToken();
 
@@ -208,13 +207,13 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
     if (!resolveRes.ok) {
       const errorText = await resolveRes.text();
       console.error('Resolve error:', errorText);
-      return res.status(resolveRes.status).json({ error: 'Ошибка при resolve запроса' });
+      return res.status(resolveRes.status).json({ error: 'Не удалось получить данные плейлиста' });
     }
 
     const playlist = await resolveRes.json();
 
     if (playlist.kind !== 'playlist') {
-      return res.status(400).json({ error: 'Ссылка не ведёт на плейлист' });
+      return res.status(400).json({ error: 'Указанная ссылка не является плейлистом' });
     }
 
     const formattedData = {
@@ -239,7 +238,7 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
     res.json(formattedData);
   } catch (err) {
     console.error('SoundCloud resolve error:', err);
-    res.status(500).json({ error: 'Ошибка при обработке запроса SoundCloud' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера при обработке запроса' });
   }
 });
 
@@ -268,11 +267,11 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
 app.get('/api/spotify/resolve', async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ error: 'Missing ?url parameter' });
+    if (!url) return res.status(400).json({ error: 'Отсутствует параметр ?url' });
 
     const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
     if (!match || !match[1]) {
-      return res.status(400).json({ error: 'Invalid Spotify playlist URL' });
+      return res.status(400).json({ error: 'Неверный формат ссылки на плейлист Spotify' });
     }
 
     const playlistId = match[1];
@@ -292,7 +291,7 @@ app.get('/api/spotify/resolve', async (req, res) => {
     if (!response.ok) {
       console.error('Spotify API error:', response.status);
       return res.status(response.status).json({
-        error: { message: 'Ошибка при получении данных' }
+        error: { message: 'Ошибка при получении данных плейлиста' }
       });
     }
 
@@ -316,7 +315,7 @@ app.get('/api/spotify/resolve', async (req, res) => {
   } catch (error) {
     console.error('Spotify resolve error:', error);
     res.status(500).json({ 
-      error: { message: 'Ошибка при обработке ссылки Spotify' }
+      error: { message: 'Внутренняя ошибка сервера при обработке запроса Spotify' }
     });
   }
 });
