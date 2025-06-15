@@ -1,16 +1,16 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import fetch from 'node-fetch';
-import swaggerUi from 'swagger-ui-express';
-import { HttpsProxyAgent } from 'https-proxy-agent';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import fetch from "node-fetch";
+import swaggerUi from "swagger-ui-express";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
-import { getSoundCloudToken } from './soundcloud/auth.js';
-import { getSpotifyToken } from './spotify/auth.js';
-import { fetchAllTracks } from './spotify/fetchAllTracks.js';
-import { mapSpotifyTracks } from './spotify/mapSpotifyTracks.js';
+import { getSoundCloudToken } from "./soundcloud/auth.js";
+import { getSpotifyToken } from "./spotify/auth.js";
+import { fetchAllTracks } from "./spotify/fetchAllTracks.js";
+import { mapSpotifyTracks } from "./spotify/mapSpotifyTracks.js";
 
-import { swaggerSpec } from './swagger.js';
+import { swaggerSpec } from "./swagger.js";
 
 dotenv.config();
 
@@ -18,34 +18,34 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: 'GET',
-  optionsSuccessStatus: 200
+  origin: process.env.CORS_ORIGIN || "*",
+  methods: "GET",
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: "10kb" }));
 app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader("X-Content-Type-Options", "nosniff");
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
 // Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const formatImageUrl = (url, service) => {
   if (!url) return null;
-  
+
   switch (service) {
-    case 'spotify':
-      return url.replace(/\/\w+\.jpg/, '/200x200.jpg');
-    
-    case 'soundcloud':
-      return url.replace(/-\w+\.jpg/, '-t200x200.jpg');
-    
-    case 'yandex':
-      return 'https://' + url.replace('%%', '200x200');
-      
+    case "spotify":
+      return url.replace(/\/\w+\.jpg/, "/200x200.jpg");
+
+    case "soundcloud":
+      return url.replace(/-\w+\.jpg/, "-t200x200.jpg");
+
+    case "yandex":
+      return "https://" + url.replace("%%", "200x200");
+
     default:
       return url;
   }
@@ -54,8 +54,20 @@ const formatImageUrl = (url, service) => {
 const getProxyAgent = () => {
   const proxyUrl = process.env.HTTP_PROXY;
   if (proxyUrl) {
-    console.log('Using proxy:', proxyUrl.replace(/\/\/.*?@/, '//*:*@'));
+    console.log(
+      "Initializing proxy agent with URL:",
+      proxyUrl.replace(/\/\/.*?@/, "//*:*@")
+    );
+    const agent = new HttpsProxyAgent(proxyUrl);
+
+    // Добавляем обработчик для отслеживания соединений
+    agent.on("connect", (response, socket, head) => {
+      console.log("Proxy connection established to:", response.req.path);
+    });
+
+    return agent;
   }
+  console.warn("No proxy configuration found!");
   return null;
 };
 
@@ -81,38 +93,47 @@ const getProxyAgent = () => {
  *       500:
  *         description: Ошибка сервера
  */
-app.get('/api/yandex/resolve', async (req, res) => {
+app.get("/api/yandex/resolve", async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ error: 'Отсутствует параметр ?url' });
+    if (!url)
+      return res.status(400).json({ error: "Отсутствует параметр ?url" });
 
     let parsedUrl;
     try {
       parsedUrl = new URL(url);
     } catch (e) {
-      return res.status(400).json({ error: 'Неверный формат ссылки на плейлист Яндекс.Музыки' });
+      return res
+        .status(400)
+        .json({ error: "Неверный формат ссылки на плейлист Яндекс.Музыки" });
     }
 
-    const pathMatch = parsedUrl.pathname.match(/\/users\/([^\/]+)\/playlists\/(\d+)/);
+    const pathMatch = parsedUrl.pathname.match(
+      /\/users\/([^\/]+)\/playlists\/(\d+)/
+    );
     if (!pathMatch) {
-      return res.status(400).json({ error: 'Ссылка не соответствует Яндекс.Музыке' });
+      return res
+        .status(400)
+        .json({ error: "Ссылка не соответствует Яндекс.Музыке" });
     }
 
     const username = pathMatch[1];
     const kind = pathMatch[2];
-    
+
     const token = process.env.YANDEX_MUSIC_TOKEN;
-    if (!token) return res.status(500).json({ error: 'Ошибка конфигурации сервера' });
+    if (!token)
+      return res.status(500).json({ error: "Ошибка конфигурации сервера" });
 
     const proxyAgent = getProxyAgent();
     const fetchOptions = {
       headers: {
-        'Authorization': `OAuth ${token}`,
-        'Accept-Language': 'ru',
-        'Accept': 'application/json'
+        Authorization: `OAuth ${token}`,
+        "Accept-Language": "ru",
+        Accept: "application/json",
       },
       timeout: 5000,
-      agent: proxyAgent
+      agent: proxyAgent,
+      debug: true,
     };
 
     const response = await fetch(
@@ -122,45 +143,49 @@ app.get('/api/yandex/resolve', async (req, res) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Yandex API error:', response.status, errorData);
+      console.error("Yandex API error:", response.status, errorData);
       return res.status(response.status).json({
-        error: { message: 'Ошибка при получении данных' }
+        error: { message: "Ошибка при получении данных" },
       });
     }
 
     const data = await response.json();
-    if (!data.result) return res.status(404).json({ error: 'Плейлист не найден' });
+    if (!data.result)
+      return res.status(404).json({ error: "Плейлист не найден" });
 
     const formattedData = {
       result: {
         title: data.result.title,
         description: data.result.description,
         trackCount: data.result.trackCount,
-        cover: formatImageUrl(data.result.cover?.itemsUri?.[0] || data.result.ogImage, 'yandex'),
-        tracks: (data.result.tracks || []).map(item => ({
+        cover: formatImageUrl(
+          data.result.cover?.itemsUri?.[0] || data.result.ogImage,
+          "yandex"
+        ),
+        tracks: (data.result.tracks || []).map((item) => ({
           track: {
             id: item.id,
             title: item.track.title,
-            cover: formatImageUrl(item.track.coverUri, 'yandex'),
+            cover: formatImageUrl(item.track.coverUri, "yandex"),
             artists: item.track.artists,
             durationMs: item.track.durationMs,
-            albums: item.track.albums
-          }
-        }))
-      }
+            albums: item.track.albums,
+          },
+        })),
+      },
     };
-    
+
     res.json(formattedData);
-    
   } catch (error) {
-    console.error('Yandex resolve error:', error);
-    const status = error.type === 'system' ? 503 : 500;
-    res.status(status).json({ 
-      error: { 
-        message: status === 503 
-          ? 'Сервис временно недоступен' 
-          : 'Внутренняя ошибка сервера' 
-      }
+    console.error("Yandex resolve error:", error);
+    const status = error.type === "system" ? 503 : 500;
+    res.status(status).json({
+      error: {
+        message:
+          status === 503
+            ? "Сервис временно недоступен"
+            : "Внутренняя ошибка сервера",
+      },
     });
   }
 });
@@ -187,10 +212,11 @@ app.get('/api/yandex/resolve', async (req, res) => {
  *       500:
  *         description: Ошибка сервера
  */
-app.get('/api/soundcloud/resolve', async (req, res) => {
+app.get("/api/soundcloud/resolve", async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ error: 'Отсутствует параметр ?url' });
+    if (!url)
+      return res.status(400).json({ error: "Отсутствует параметр ?url" });
 
     const access_token = await getSoundCloudToken();
 
@@ -198,47 +224,52 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
       `https://api.soundcloud.com/resolve?url=${encodeURIComponent(url)}`,
       {
         headers: {
-          'Authorization': `OAuth ${access_token}`
-        }
+          Authorization: `OAuth ${access_token}`,
+        },
       }
     );
 
-
     if (!resolveRes.ok) {
       const errorText = await resolveRes.text();
-      console.error('Resolve error:', errorText);
-      return res.status(resolveRes.status).json({ error: 'Не удалось получить данные плейлиста' });
+      console.error("Resolve error:", errorText);
+      return res
+        .status(resolveRes.status)
+        .json({ error: "Не удалось получить данные плейлиста" });
     }
 
     const playlist = await resolveRes.json();
 
-    if (playlist.kind !== 'playlist') {
-      return res.status(400).json({ error: 'Указанная ссылка не является плейлистом' });
+    if (playlist.kind !== "playlist") {
+      return res
+        .status(400)
+        .json({ error: "Указанная ссылка не является плейлистом" });
     }
 
     const formattedData = {
       result: {
         title: playlist.title,
-        description: playlist.description || '',
+        description: playlist.description || "",
         trackCount: playlist.tracks.length,
-        cover: formatImageUrl(playlist.artwork_url, 'soundcloud'),
-        tracks: playlist.tracks.map(track => ({
+        cover: formatImageUrl(playlist.artwork_url, "soundcloud"),
+        tracks: playlist.tracks.map((track) => ({
           track: {
             id: track.id,
             title: track.title,
-            cover: formatImageUrl(track.artwork_url, 'soundcloud'),
+            cover: formatImageUrl(track.artwork_url, "soundcloud"),
             artists: [{ name: track.user.username }],
             durationMs: track.duration,
-            albums: [{ title: track.user.username }]
-          }
-        }))
-      }
+            albums: [{ title: track.user.username }],
+          },
+        })),
+      },
     };
 
     res.json(formattedData);
   } catch (err) {
-    console.error('SoundCloud resolve error:', err);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера при обработке запроса' });
+    console.error("SoundCloud resolve error:", err);
+    res
+      .status(500)
+      .json({ error: "Внутренняя ошибка сервера при обработке запроса" });
   }
 });
 
@@ -264,14 +295,17 @@ app.get('/api/soundcloud/resolve', async (req, res) => {
  *       500:
  *         description: Ошибка сервера
  */
-app.get('/api/spotify/resolve', async (req, res) => {
+app.get("/api/spotify/resolve", async (req, res) => {
   try {
     const { url } = req.query;
-    if (!url) return res.status(400).json({ error: 'Отсутствует параметр ?url' });
+    if (!url)
+      return res.status(400).json({ error: "Отсутствует параметр ?url" });
 
     const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
     if (!match || !match[1]) {
-      return res.status(400).json({ error: 'Неверный формат ссылки на плейлист Spotify' });
+      return res
+        .status(400)
+        .json({ error: "Неверный формат ссылки на плейлист Spotify" });
     }
 
     const playlistId = match[1];
@@ -281,48 +315,54 @@ app.get('/api/spotify/resolve', async (req, res) => {
       `https://api.spotify.com/v1/playlists/${playlistId}`,
       {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json'
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
         },
-        timeout: 5000
+        timeout: 5000,
       }
     );
 
     if (!response.ok) {
-      console.error('Spotify API error:', response.status);
+      console.error("Spotify API error:", response.status);
       return res.status(response.status).json({
-        error: { message: 'Ошибка при получении данных плейлиста' }
+        error: { message: "Ошибка при получении данных плейлиста" },
       });
     }
 
     const data = await response.json();
-    
-    const allTrackItems = await fetchAllTracks(playlistId, accessToken, data.tracks.total);
-    const { tracks: mappedTracks, actualCount } = mapSpotifyTracks(allTrackItems);
+
+    const allTrackItems = await fetchAllTracks(
+      playlistId,
+      accessToken,
+      data.tracks.total
+    );
+    const { tracks: mappedTracks, actualCount } =
+      mapSpotifyTracks(allTrackItems);
 
     const formattedData = {
       result: {
         title: data.name,
-        description: data.description || '',
+        description: data.description || "",
         trackCount: actualCount,
-        cover: formatImageUrl(data.images[0]?.url, 'spotify'),
-        tracks: mappedTracks
-      }
+        cover: formatImageUrl(data.images[0]?.url, "spotify"),
+        tracks: mappedTracks,
+      },
     };
-    
+
     res.json(formattedData);
-    
   } catch (error) {
-    console.error('Spotify resolve error:', error);
-    res.status(500).json({ 
-      error: { message: 'Внутренняя ошибка сервера при обработке запроса Spotify' }
+    console.error("Spotify resolve error:", error);
+    res.status(500).json({
+      error: {
+        message: "Внутренняя ошибка сервера при обработке запроса Spotify",
+      },
     });
   }
 });
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Ресурс не найден' });
+  res.status(404).json({ error: "Ресурс не найден" });
 });
 
 app.listen(PORT, () => {
